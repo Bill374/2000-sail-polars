@@ -7,7 +7,7 @@ NMEA2000 message logging and sailing performance analysis
 Designed to be installed and run on: 
 * Raspberry Pi Zero
 * Waveshare RS485 CAN HAT
-* UPS
+* Cytron UPS Power HAT RPI-UPS-UHAT-WB
 
 ## Software Design
 ### Logger
