@@ -1,5 +1,7 @@
 # NMEA2000 Sail Polars Installation Instructions
 
+Instructions to set up Raspberry Pi Zero, UPS and CAN HAT prior to running the logger application.  Eventually this should be handled by an automated install script.
+
 ## Pi Zero configuration
 
 ## Installing the UPS Power Mangement
@@ -46,7 +48,31 @@ The battery voltage is 3.71V
 
 ## Setting up the CAN HAT
 
+### MCP2515 Setup
+Edit /boot/config.txt to make sure the mcp2515 kernel driver is open <br>
+Add the following lines: 
+```
+dtparam=spi=on
+dtoverlay=mcp2515-can0,oscillator=8000000,interrupt=25,spimaxfrequency=1000000
+```
+Then restart the raspberry pi `sudo reboot`
+
 ## Python Dependencies
 
+### Install required python libraries:
+```
+sudo apt-get install python-pip
+sudo pip install python-can
+```
 ## Installing the logger
 
+### Download a file from GitHub
+
+With the Pi Zero connected to WiFi code files can be downloaded directly from GitHub.
+```
+curl --output Readme https://raw.githubusercontent.com/Bill374/2000-sail-polars/master/Installation/Readme.md
+```
+
+`/master/` is the branch of the repository
+`/Installation/` is a directory path
+`Readme.md` is this file
