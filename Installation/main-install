@@ -1,11 +1,13 @@
 #!/usr/bin/python3
-# Rum Kist Racing NMEA2000 Logger
-# Install script
-# This is the real installer that does all the work
-# Called from install-RKR-Logger
+'''
+Rum Kist Racing NMEA2000 Logger Install script.
 
+This is the real installer that does all the work.
+Called from install-RKR-Logger.
+'''
 # Required for parsing command line
-import sys, getopt
+import sys
+import getopt
 # Required for accessing O/S filesystem
 import os
 # Required for downloading files
@@ -17,58 +19,64 @@ import urllib3
 
 
 # Initialise installation messaging
-verbose = False
+VERBOSE = False
+
+
 def log(msg):
-    if verbose:
+    ''' Bad log function.  Should use python logger '''
+    if VERBOSE:
         print(msg)
-    return
+
 
 # Parse the arguments passed to the script
 # If any of them are not recognised exit with an error
-# Since this script downloads and runs the the main-install which might need more parameters
-# it might be better if it did not terminate for unknown parameters and just leave that to the main installer.
+# Since this script downloads and runs the the main-install which might need
+# more parameters.  It might be better if it did not terminate for unknown
+# parameters and just leave that to the main installer.
 # We can make that decision later.
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"vg:",["verbose"])
+    opts, args = getopt.getopt(sys.argv[1:], "vg:", ["verbose"])
 except getopt.GetoptError as err:
     # Something went wrong, found an unexpected argument
     print(err)
     print('Unexpected parameter - terminating main-install')
-    exit(2)
+    sys.exit(2)
 
-gitHubURL = 'https://raw.githubusercontent.com/Bill374/2000-sail-polars/master/'
+GIT_HUB_URL = 'https://raw.githubusercontent.com/Bill374/'\
+    '2000-sail-polars/master/'
 
 for opt, arg in opts:
-    if opt == '-v':	
-        verbose = True
+    if opt == '-v':
+        VERBOSE = True
         log('option -v')
     elif opt == '-g':
-        gitHubURL = arg
+        GIT_HUB_URL = arg
         log('option -g' + arg)
 
 log('*** Start main-install ***')
 
 directory = os.getcwd()
 
-log('installing from ' + gitHubURL)
+log('installing from ' + GIT_HUB_URL)
 log('installing to ' + directory)
 
 # download all the files listed in the manifest file
 log('Retrieving manifest of files to install')
-fileName = wget.download(gitHubURL + 'Installation/manifest.txt')
+fileName = wget.download(GIT_HUB_URL + 'Installation/manifest.txt')
 log('')
 log('downloaded ' + fileName)
 manifest = open('manifest.txt', 'r')
 http = urllib3.PoolManager()
 for source in manifest:
     if source[0] != '#':
-        fileToGet = gitHubURL + source.strip('\n')
+        fileToGet = GIT_HUB_URL + source.strip('\n')
         try:
             req = http.request('GET', fileToGet)
-        except urllib3.exceptions.HTTPError as e:
-            log('unable to find file ' + source.strip('\n') + ' listed in manifest')
-            log(e)
-            exit(3)
+        except urllib3.exceptions.HTTPError as http_error:
+            log('unable to find file ' + source.strip('\n') +
+                ' listed in manifest')
+            log(http_error)
+            sys.exit(3)
         fileName = wget.download(fileToGet, out=directory)
         log('')
         log('downloaded ' + fileName)
@@ -84,17 +92,23 @@ rc = os.system('pip3 install --upgrade python-can')
 
 # modify /boot/config.txt if required
 
+
 class CfgLine:
+    '''Can't remember what this is for.'''
+
     def __init__(self, line):
         self.line = line
         self.found = False
 
+
 bootCfg = []
 bootCfg.append(CfgLine('dtparam=spi=on\n'))
 # RS485 CAN HAT - 8M crystal version
-# bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=8000000,interrupt=25,spimaxfrequency=1000000\n'))
+# bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=8000000,'
+#                        'interrupt=25,spimaxfrequency=1000000\n'))
 # RS485 CAN HAT - 12M crystal version
-bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=2000000\n'))
+bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,'
+                       'interrupt=25,spimaxfrequency=2000000\n'))
 
 log('Reading /boot/config.txt, checking if updates required.')
 cfg = open('/boot/config.txt', 'r')
@@ -106,28 +120,27 @@ for source in cfg:
 cfg.close()
 
 # Is there anything to update in /boot/config.txt?
-needUpdate = False
+NEED_UPDATE = False
 for target in bootCfg:
-    if not(target.found):
-        needUpdate = True
+    if not target.found:
+        NEED_UPDATE = True
 
-if needUpdate:
+if NEED_UPDATE:
     log('Writing to /boot/config.txt')
     cfg = open('/boot/config.txt', 'a')
     cfg.write('\n# RKR Logger\n')
     cfg.write('# Waveshare RS485 CAN HAT mcp2515 kernel driver\n')
     for target in bootCfg:
-        if not(target.found):
+        if not target.found:
             log('Writing ' + target.line.strip('\n'))
             cfg.write(target.line)
 else:
     log('No updates needed to /boot/config.txt')
 cfg.close()
-        
+
 log('Finished modifying /boot/config.txt')
 
 log('*** End main-install ***')
 
 # Clean Exit
-exit(0)
-
+sys.exit(0)
