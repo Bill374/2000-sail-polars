@@ -1,0 +1,5 @@
+# manifest of files to install on Pi
+test/receiveOne.py
+test/sendOne.py
+test/logTen.py
+# end of manifest

@@ -1,0 +1,129 @@
+#!/usr/bin/python3
+# Rum Kist Racing NMEA2000 Logger install script
+# Author - Bill Morland
+# Version 1.0
+#
+# Error codes
+# 2 - script was called with an unrecognised parameter
+# 3 - unable to establish a connection to Github
+
+# Required for parsing command line
+import sys, getopt
+# Required for http connection and download from Github
+import requests
+# Required for accessing O/S filesystem
+import os
+# Required for downloading files
+import wget
+# Required for chmod permissions
+import stat
+
+
+# Initialise installation messaging
+verbose = False
+def log(msg):
+	if verbose:
+		print(msg)
+	return
+
+# default directory to install the logger
+directory = '/opt/RKR-Logger'
+
+# default Github branch to pull from
+branch = 'master'
+
+# syntax for calling the installer 
+def usage():
+	print('install-RKR-Logger [-v] [-d <install directory>] [-b <Github branch>] [--verbose]')
+
+# Parse the arguments passed to the script
+# If any of them are not recognised exit with an error
+# Since this script downloads and runs the the main-install which might need more parameters
+# it might be better if it did not terminate for unknown parameters and just leave that to the main installer.
+# We can make that decision later.
+try:
+	opts, args = getopt.getopt(sys.argv[1:],"vhd:b:",["verbose","help"])
+except getopt.GetoptError as err:
+	# Something went wrong, found an unexpected argument
+	print(err)
+	print('Expected usage')
+	usage()
+	exit(2)
+
+for opt, arg in opts:
+	if opt in ("-v", "--verbose"):
+		verbose = True
+	elif opt in ("-h", "--help"):
+		usage()
+		exit(0)
+	elif opt=='-d':
+		directory = arg
+	elif opt == '-b':
+		branch = arg
+
+log('*** Installing Rum Kist Racing NMEA2000 Logger ***')
+log('')
+log('*** Start install-RKR-Logger ***')
+
+# Check for access to Github.
+# If there is no access to Github there is no point in continuing
+url = 'https://rawgithubusercontent.com' 
+timeout = 5
+try:
+	r = requests.get(url, timeout=timeout)
+except requests.ConnectionError as ex:
+	print('Unable to establish connection to Github.')
+	print(ex)
+	exit(3)
+
+log('Github is responding - starting installation')
+
+# A good check to include here before executing anything else is to find out if this is the latest version of install-rkr-logger
+# If this is not the latest version should we terminate? Fetch the latest version?
+
+# Make sure we have a nice clean empty directory for our install
+log('Installing to directory: ' + directory)
+if os.path.isdir(directory):
+	log('Installation directory already exists deleting directory and contents.')
+	os.system('rm -rf ' + directory)
+elif os.path.isfile(directory):
+	log('A file that is not a directory exists with the name', directory, 'removing file')
+	os.system('rm ' + directory)
+log('Creating directory: ' + directory)
+os.system('mkdir ' + directory)
+log('Change working directory to install directory')
+os.chdir(directory)
+directory = os.getcwd()
+log('Install directory: ' + directory)
+
+# download the real installer that does all the work from GitHub
+log('Installing from Github branch: ' + branch)
+
+# Path to the Github repository
+githubURL = 'https://raw.githubusercontent.com/Bill374/2000-sail-polars/' + branch + '/'
+log('Downloading from ' + githubURL)
+
+# Get the real installer 
+log('Getting main-install script')
+fileName = wget.download(githubURL + '/Installation/main-install', out=directory)
+log('')
+log('Making main-install executable by user group and world')
+st = os.stat('main-install')
+os.chmod('main-install', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+# execute the installer
+log('Executing main-install')
+log('')
+if verbose:
+    rc = os.system('./main-install -v -g ' + githubURL)
+else:
+    rc = os.system('./main-install -g ' + githubURL)
+log('')
+log('Finished executing main-install')
+
+if (rc != 0):
+    log('Something went wrong in main-install')
+    exit(rc)
+
+# Clean Exit
+log('*** End install-RKR-Logger ***')
+exit(0)

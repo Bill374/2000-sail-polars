@@ -1,0 +1,133 @@
+#!/usr/bin/python3
+# Rum Kist Racing NMEA2000 Logger
+# Install script
+# This is the real installer that does all the work
+# Called from install-RKR-Logger
+
+# Required for parsing command line
+import sys, getopt
+# Required for accessing O/S filesystem
+import os
+# Required for downloading files
+import wget
+# Required for chmod permissions
+# import stat
+# Required for testing existance of a file on Github
+import urllib3
+
+
+# Initialise installation messaging
+verbose = False
+def log(msg):
+    if verbose:
+        print(msg)
+    return
+
+# Parse the arguments passed to the script
+# If any of them are not recognised exit with an error
+# Since this script downloads and runs the the main-install which might need more parameters
+# it might be better if it did not terminate for unknown parameters and just leave that to the main installer.
+# We can make that decision later.
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"vg:",["verbose"])
+except getopt.GetoptError as err:
+    # Something went wrong, found an unexpected argument
+    print(err)
+    print('Unexpected parameter - terminating main-install')
+    exit(2)
+
+gitHubURL = 'https://raw.githubusercontent.com/Bill374/2000-sail-polars/master/'
+
+for opt, arg in opts:
+    if opt == '-v':	
+        verbose = True
+        log('option -v')
+    elif opt == '-g':
+        gitHubURL = arg
+        log('option -g' + arg)
+
+log('*** Start main-install ***')
+
+directory = os.getcwd()
+
+log('installing from ' + gitHubURL)
+log('installing to ' + directory)
+
+# download all the files listed in the manifest file
+log('Retrieving manifest of files to install')
+fileName = wget.download(gitHubURL + 'Installation/manifest.txt')
+log('')
+log('downloaded ' + fileName)
+manifest = open('manifest.txt', 'r')
+http = urllib3.PoolManager()
+for source in manifest:
+    if source[0] != '#':
+        fileToGet = gitHubURL + source.strip('\n')
+        try:
+            req = http.request('GET', fileToGet)
+        except urllib3.exceptions.HTTPError as e:
+            log('unable to find file ' + source.strip('\n') + ' listed in manifest')
+            log(e)
+            exit(3)
+        fileName = wget.download(fileToGet, out=directory)
+        log('')
+        log('downloaded ' + fileName)
+manifest.close()
+
+# install apt dependencies
+log('Installing apt dependencies')
+rc = os.system('apt-get update')
+rc = os.system('apt-get install -y can-utils')
+
+# install python packages
+rc = os.system('pip3 install --upgrade python-can')
+
+# modify /boot/config.txt if required
+
+class CfgLine:
+    def __init__(self, line):
+        self.line = line
+        self.found = False
+
+bootCfg = []
+bootCfg.append(CfgLine('dtparam=spi=on\n'))
+# RS485 CAN HAT - 8M crystal version
+# bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=8000000,interrupt=25,spimaxfrequency=1000000\n'))
+# RS485 CAN HAT - 12M crystal version
+bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=2000000\n'))
+
+log('Reading /boot/config.txt, checking if updates required.')
+cfg = open('/boot/config.txt', 'r')
+for source in cfg:
+    for target in bootCfg:
+        if source == target.line:
+            log('Found ' + target.line.strip('\n'))
+            target.found = True
+cfg.close()
+
+# Is there anything to update in /boot/config.txt?
+needUpdate = False
+for target in bootCfg:
+    if not(target.found):
+        needUpdate = True
+
+if needUpdate:
+    log('Writing to /boot/config.txt')
+    cfg = open('/boot/config.txt', 'a')
+    cfg.write('\n# RKR Logger\n')
+    cfg.write('# Waveshare RS485 CAN HAT mcp2515 kernel driver\n')
+    for target in bootCfg:
+        if not(target.found):
+            log('Writing ' + target.line.strip('\n'))
+            cfg.write(target.line)
+else:
+    log('No updates needed to /boot/config.txt')
+cfg.close()
+        
+log('Finished modifying /boot/config.txt')
+
+log('*** End main-install ***')
+
+# Clean Exit
+exit(0)
+
