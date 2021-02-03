@@ -16,18 +16,12 @@ import wget
 # import stat
 # Required for testing existance of a file on Github
 import urllib3
+import logging
 import pi_install as pi
 
 
 # Initialise installation messaging
 VERBOSE = False
-
-
-def log(msg):
-    ''' Bad log function.  Should use python logger '''
-    if VERBOSE:
-        print(msg)
-
 
 # Parse the arguments passed to the script
 # If any of them are not recognised exit with an error
@@ -49,23 +43,23 @@ GIT_HUB_URL = 'https://raw.githubusercontent.com/Bill374/'\
 for opt, arg in opts:
     if opt == '-v':
         VERBOSE = True
-        log('option -v')
+        logging.info('option -v')
     elif opt == '-g':
         GIT_HUB_URL = arg
-        log('option -g' + arg)
+        logging.info('option -g' + arg)
 
-log('*** Start main-install ***')
+logging.info('*** Start main-install ***')
 
 directory = os.getcwd()
 
-log('installing from ' + GIT_HUB_URL)
-log('installing to ' + directory)
+logging.info('installing from ' + GIT_HUB_URL)
+logging.info('installing to ' + directory)
 
 # download all the files listed in the manifest file
-log('Retrieving manifest of files to install')
+logging.info('Retrieving manifest of files to install')
 fileName = wget.download(GIT_HUB_URL + 'Installation/manifest.txt')
-log('')
-log('downloaded ' + fileName)
+logging.info('')
+logging.info('downloaded ' + fileName)
 manifest = open('manifest.txt', 'r')
 http = urllib3.PoolManager()
 for source in manifest:
@@ -74,17 +68,17 @@ for source in manifest:
         try:
             req = http.request('GET', fileToGet)
         except urllib3.exceptions.HTTPError as http_error:
-            log('unable to find file ' + source.strip('\n') +
-                ' listed in manifest')
-            log(http_error)
+            logging.info('unable to find file ' + source.strip('\n') +
+                         ' listed in manifest')
+            logging.info(http_error)
             sys.exit(3)
         fileName = wget.download(fileToGet, out=directory)
-        log('')
-        log('downloaded ' + fileName)
+        logging.info('')
+        logging.info('downloaded ' + fileName)
 manifest.close()
 
 # install apt dependencies
-log('Installing apt dependencies')
+logging.inf('Installing apt dependencies')
 rc = os.system('apt-get update')
 rc = os.system('apt-get install -y can-utils')
 
@@ -102,7 +96,7 @@ bootCfg.append(pi.CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,'
 pi.add_lines('/boot/config.txt', bootCfg)
 
 
-log('*** End main-install ***')
+logging.info('*** End main-install ***')
 
 # Clean Exit
 sys.exit(0)

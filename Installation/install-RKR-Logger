@@ -20,16 +20,11 @@ import stat
 import requests
 # Required for downloading files
 import wget
+import logging
 
 
 # Initialise installation messaging
 VERBOSE = False
-
-
-def log(msg):
-    '''should get rid of this any use Python logger.'''
-    if VERBOSE:
-        print(msg)
 
 
 # default directory to install the logger
@@ -72,9 +67,9 @@ for opt, arg in opts:
     elif opt == '-b':
         BRANCH = arg
 
-log('*** Installing Rum Kist Racing NMEA2000 Logger ***')
-log('')
-log('*** Start install-RKR-Logger ***')
+logging.info('*** Installing Rum Kist Racing NMEA2000 Logger ***')
+logging.info('')
+logging.info('*** Start install-RKR-Logger ***')
 
 # Check for access to Github.
 # If there is no access to Github there is no point in continuing
@@ -83,11 +78,11 @@ TIMEOUT = 5
 try:
     r = requests.get(URL, timeout=TIMEOUT)
 except requests.ConnectionError as ex:
-    print('Unable to establish connection to Github.')
-    print(ex)
+    logging.error('Unable to establish connection to Github.')
+    logging.error(ex)
     sys.exit(3)
 
-log('Github is responding - starting installation')
+logging.info('Github is responding - starting installation')
 
 # A good check to include here before executing anything else is to find out
 # if this is the latest version of install-rkr-logger
@@ -95,53 +90,53 @@ log('Github is responding - starting installation')
 # latest version?
 
 # Make sure we have a nice clean empty directory for our install
-log('Installing to directory: ' + DIRECTORY)
+logging.info('Installing to directory: ' + DIRECTORY)
 if os.path.isdir(DIRECTORY):
-    log('Installation directory already exists '
-        'deleting directory and contents.')
+    logging.info('Installation directory already exists '
+                 'deleting directory and contents.')
     os.system('rm -rf ' + DIRECTORY)
 elif os.path.isfile(DIRECTORY):
-    log('A file that is not a directory exists with the name ' +
-        DIRECTORY + ' removing file')
+    logging.info('A file that is not a directory exists with the name ' +
+                 DIRECTORY + ' removing file')
     os.system('rm ' + DIRECTORY)
-log('Creating directory: ' + DIRECTORY)
+logging.info('Creating directory: ' + DIRECTORY)
 os.system('mkdir ' + DIRECTORY)
-log('Change working directory to install directory')
+logging.info('Change working directory to install directory')
 os.chdir(DIRECTORY)
 directory = os.getcwd()
-log('Install directory: ' + DIRECTORY)
+logging.info('Install directory: ' + DIRECTORY)
 
 # download the real installer that does all the work from GitHub
-log('Installing from Github branch: ' + BRANCH)
+logging.info('Installing from Github branch: ' + BRANCH)
 
 # Path to the Github repository
 GIT_HUB_URL = ('https://raw.githubusercontent.com/Bill374/2000-sail-polars/'
                + BRANCH + '/')
-log('Downloading from ' + GIT_HUB_URL)
+logging.info('Downloading from ' + GIT_HUB_URL)
 
 # Get the real installer
-log('Getting main-install script')
+logging.info('Getting main-install script')
 fileName = wget.download(GIT_HUB_URL + '/Installation/main-install',
                          out=directory)
-log('')
-log('Making main-install executable by user group and world')
+logging.info('')
+logging.info('Making main-install executable by user group and world')
 st = os.stat('main-install')
 os.chmod('main-install',
          st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 # execute the installer
-log('Executing main-install')
-log('')
+logging.info('Executing main-install')
+logging.info('')
 if VERBOSE:
     rc = os.system('./main-install -v -g ' + GIT_HUB_URL)
 else:
     rc = os.system('./main-install -g ' + GIT_HUB_URL)
-log('')
-log('Finished executing main-install')
+logging.info('')
+logging.info('Finished executing main-install')
 
 if rc != 0:
-    log('Something went wrong in main-install')
+    logging.info('Something went wrong in main-install')
     sys.exit(rc)
 
-# Clean Exit
-log('*** End install-RKR-Logger ***')
+logging.info('*** End install-RKR-Logger ***')
+
 sys.exit(0)
