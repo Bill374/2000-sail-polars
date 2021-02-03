@@ -80,7 +80,10 @@ manifest.close()
 # install apt dependencies
 logging.inf('Installing apt dependencies')
 rc = os.system('apt-get update')
+# Controller Area Network utilities
 rc = os.system('apt-get install -y can-utils')
+# I2C tools for UPS HAT
+rc = os.system('apt-get install i2c-tools')
 
 # install python packages
 rc = os.system('pip3 install --upgrade python-can')
