@@ -7,7 +7,8 @@ Created on Fri Feb  5 18:52:25 2021
 """
 
 import datetime
-import os
+import logging
+from subprocess import call
 import can
 
 
@@ -21,8 +22,23 @@ def start_can_bus():
 
     """
 
-    os.system('sudo ip link set can0 type can bitrate 100000')
-    os.system('sudo ifconfig can0 up')
+    try:
+        rc = call('sudo ip link set can0 type can bitrate 100000')
+        if rc < 0:
+            logging.error('Call to ip link set terminated by signal.')
+            return None
+    except OSError:
+        logging.error('Call to ip link set failed.')
+        return None
+
+    try:
+        rc = call('sudo ifconfig can0 up')
+        if rc < 0:
+            logging.error('Call to ifconfig terminated by signal.')
+            return None
+    except OSError:
+        logging.error('Call to ifconfig failed.')
+        return None
 
     return can.interface.Bus(channel='can0', bustype='socketcan_ctypes')
 
@@ -36,7 +52,14 @@ def stop_can_bus():
     None.
 
     """
-    os.system('sudo ifconfig can0 down')
+    try:
+        rc = call('sudo ifconfig can0 down')
+        if rc < 0:
+            logging.error('Call to ifconfig terminated by signal.')
+            return None
+    except OSError:
+        logging.error('Call to ifconfig failed.')
+        return None
 
 
 def set_filters(can0):
