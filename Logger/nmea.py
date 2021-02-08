@@ -8,7 +8,7 @@ Created on Fri Feb  5 18:52:25 2021
 
 import datetime
 import logging
-from subprocess import call
+import subprocess
 import can
 
 
@@ -23,7 +23,7 @@ def start_can_bus():
     """
 
     try:
-        rc = call('sudo ip link set can0 type can bitrate 100000')
+        rc = subprocess.call('sudo ip link set can0 type can bitrate 100000')
         if rc < 0:
             logging.error('Call to ip link set terminated by signal.')
             return None
@@ -32,7 +32,7 @@ def start_can_bus():
         return None
 
     try:
-        rc = call('sudo ifconfig can0 up')
+        rc = subprocess.call('sudo ifconfig can0 up')
         if rc < 0:
             logging.error('Call to ifconfig terminated by signal.')
             return None
@@ -53,7 +53,7 @@ def stop_can_bus():
 
     """
     try:
-        rc = call('sudo ifconfig can0 down')
+        rc = subprocess.call('sudo ifconfig can0 down')
         if rc < 0:
             logging.error('Call to ifconfig terminated by signal.')
             return None
@@ -103,3 +103,34 @@ def get_gps_time(can0, wait=100):
 
     """
     return datetime.datetime.today()
+
+
+def zip_logs():
+    """
+    Zip all the log files.
+
+    Zip all the log files to save space and reduce costs for data transmission
+    to Google Drive.
+
+    Returns
+    -------
+    None.
+
+    """
+    return None
+
+
+def send_to_drive():
+    """
+    Send all log files to Google Drive.
+
+    Send all log files from the Pi to Google Drive.  If the file transfer was
+    successful delete the log files from the Pi
+
+    Returns
+    -------
+    None.
+
+    """
+    zip_logs()
+    return None
