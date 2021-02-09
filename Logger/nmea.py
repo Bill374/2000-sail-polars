@@ -6,10 +6,12 @@ Created on Fri Feb  5 18:52:25 2021
 @author: wmorland
 """
 
+import os
 import datetime
 import logging
 import subprocess
 import can
+import zipfile
 
 
 def start_can_bus():
@@ -111,12 +113,25 @@ def zip_logs():
 
     Zip all the log files to save space and reduce costs for data transmission
     to Google Drive.
+    Each log file with the extension n2k is zipped into a separate archive.
 
     Returns
     -------
     None.
 
     """
+
+    for file in os.listdir():
+        if file.endswith('.n2k'):
+            logging.info(f'Zipping {file}')
+            with zipfile.ZipFile(f'{file}.zip', 'w') as log_zip:
+                log_zip.write(file)
+                if log_zip.testzip() is not None:
+                    logging.error(f'Zipping {file} not successfull')
+                    # Delete the zip file to clean up after the error.
+
+    # Assuming nothing went wrong we would delete the log files here
+
     return None
 
 
