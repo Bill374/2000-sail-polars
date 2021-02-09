@@ -66,7 +66,7 @@ class TestAddLines(unittest.TestCase):
         file_contents = ("first line\n")
         test_lines = [pi.CfgLine("second line\n")]
         with patch("builtins.open",
-                   mock_open(read_data=file_contents)) as test_file:
+                   mock_open(read_data=file_contents)):
             with self.assertLogs(level="ERROR") as logs:
                 pi.add_lines('test_file', test_lines)
         self.assertEqual(logs.output,
@@ -104,7 +104,6 @@ class TestAddLines(unittest.TestCase):
                  call('third line\n')]
         handle.write.assert_has_calls(calls)
 
-# lines has two lines - both are successfully written to file
     def test_two_lines_write_two(self):
         """
         add_lines called successfully with two lines one succesffully added.
