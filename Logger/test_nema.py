@@ -124,6 +124,34 @@ class TestZipLogs(unittest.TestCase):
         """Dummy test."""
         self.assertTrue(True, msg='Should always pass.')
 
+    @patch('os.listdir', return_value=[])
+    @patch('zipfile.ZipFile')
+    def test_empty_directory(self, zip_file, list_dir):
+        """zip_logs() no files in directory."""
+        nmea.zip_logs()
+        self.assertEqual(zip_file.call_args_list, [],
+                         msg='Should not attempt to zip when no files in '
+                         'directory.')
+
+    @patch('os.listdir', return_value=['log.txt'])
+    @patch('zipfile.ZipFile')
+    def test_no_file_match(self, zip_file, list_dir):
+        """zip_logs() no *.n2k files in directory."""
+        nmea.zip_logs()
+        self.assertEqual(zip_file.call_args_list, [],
+                         msg='Should not attempt to zip when no *.n2k files in '
+                         'directory.')
+
+    @patch('os.listdir', return_value=['log.n2k'])
+    @patch('zipfile.ZipFile')
+    def test_one_file_match(self, zip_file, list_dir):
+        """zip_logs() one *.n2k file in directory."""
+        nmea.zip_logs()
+        self.assertEqual(zip_file.call_args_list,
+                         [call('log.n2k.zip', 'w')],
+                         msg='Expected one successful call to create zip '
+                         'file.')
+
 
 class TestSendToDrive(unittest.TestCase):
     """Test cases for send_to_drive."""
