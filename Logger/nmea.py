@@ -58,10 +58,9 @@ def stop_can_bus():
         rc = subprocess.call('sudo ifconfig can0 down')
         if rc < 0:
             logging.error('Call to ifconfig terminated by signal.')
-            return None
     except OSError:
         logging.error('Call to ifconfig failed.')
-        return None
+    return None
 
 
 def set_filters(can0):

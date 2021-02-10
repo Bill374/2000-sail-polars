@@ -96,9 +96,39 @@ class TestStartCanBus(unittest.TestCase):
 class TestStopCanBus(unittest.TestCase):
     """Test cases for stop_can_bus."""
 
-    def test_ok(self):
-        """Dummy test."""
-        self.assertTrue(True, msg='Should always pass.')
+    @patch('subprocess.call', return_value=-1)
+    def test_call_interupt(self, ip_call):
+        """stop_can_bus() ifconfig terminated by interupt"""
+        with self.assertLogs(level='ERROR') as logs:
+            rc = nmea.stop_can_bus()
+        ip_call.assert_called_with('sudo ifconfig can0 down')
+        self.assertEqual(logs.output,
+                         ['ERROR:root:Call to ifconfig terminated by '
+                          'signal.'],
+                         msg='expect ERROR logged when ifcongif terminated by '
+                         'signal.')
+        self.assertIsNone(rc, msg='stop_can_bus should return None if call to'
+                          'ifconfig is interupted.')
+
+    @patch('subprocess.call', return_value=0, side_effect=OSError())
+    def test_call_fail(self, ip_call):
+        """stop_can_bus() ifconfig fails"""
+        with self.assertLogs(level='ERROR') as logs:
+            rc = nmea.stop_can_bus()
+        ip_call.assert_called_with('sudo ifconfig can0 down')
+        self.assertEqual(logs.output,
+                         ['ERROR:root:Call to ifconfig failed.'],
+                         msg='expect ERROR logged when ifconfig fails.')
+        self.assertIsNone(rc, msg='stop_can_bus should return None if call to'
+                          'ifconfig fails.')
+
+    @patch('subprocess.call', return_value=0)
+    def test_successful_stop(self, ip_call):
+        """stop_can_bus() success"""
+        rc = nmea.stop_can_bus()
+        ip_call.assert_called_with('sudo ifconfig can0 down')
+        self.assertIsNone(rc, msg='stop_can_bus should return None on '
+                          'success.')
 
 
 class TestSetFilters(unittest.TestCase):
@@ -120,10 +150,6 @@ class TestGetGpsTime(unittest.TestCase):
 class TestZipLogs(unittest.TestCase):
     """Test cases for zip_logs."""
 
-    def test_ok(self):
-        """Dummy test."""
-        self.assertTrue(True, msg='Should always pass.')
-
     @patch('os.listdir', return_value=[])
     @patch('zipfile.ZipFile')
     def test_empty_directory(self, zip_file, list_dir):
@@ -139,8 +165,8 @@ class TestZipLogs(unittest.TestCase):
         """zip_logs() no *.n2k files in directory."""
         nmea.zip_logs()
         self.assertEqual(zip_file.call_args_list, [],
-                         msg='Should not attempt to zip when no *.n2k files in '
-                         'directory.')
+                         msg='Should not attempt to zip when no *.n2k files '
+                         'in directory.')
 
     @patch('os.listdir', return_value=['log.n2k'])
     @patch('zipfile.ZipFile')
