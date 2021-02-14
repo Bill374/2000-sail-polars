@@ -7,6 +7,9 @@ Created on Sun Jan 31 21:24:52 2021
 """
 
 import logging
+import os
+import wget
+import urllib3
 
 
 class CfgLine:
@@ -81,3 +84,76 @@ def add_lines(file_name, lines):
         logging.info(f'Finished modifying {file_name}')
     else:
         logging.info(f'No updates needed to {file_name}')
+
+
+def main(git_hub_url):
+    """
+    Main installation function.
+
+    Returns
+    -------
+    None.
+
+    """
+    logging.info('*** Start main-install ***')
+
+    directory = os.getcwd()
+
+    logging.info(f'installing from {git_hub_url}')
+    logging.info(f'installing to {directory}')
+
+    # download all the files listed in the manifest file
+    logging.info('Retrieving manifest of files to install')
+    fileName = wget.download(f'{git_hub_url} Installation/manifest.txt')
+    logging.info('')
+    logging.info(f'downloaded {fileName}')
+    manifest = open('manifest.txt', 'r')
+    http = urllib3.PoolManager()
+    for source in manifest:
+        if source[0] != '#':
+            fileToGet = git_hub_url + source.strip('\n')
+            try:
+                req = http.request('GET', fileToGet)
+            except urllib3.exceptions.HTTPError as http_error:
+                logging.info('unable to find file ' + source.strip('\n') +
+                             ' listed in manifest')
+                logging.info(http_error)
+                return 3
+            fileName = wget.download(fileToGet, out=directory)
+            logging.info('')
+            logging.info('downloaded ' + fileName)
+    manifest.close()
+
+    # install apt dependencies
+    logging.inf('Installing apt dependencies')
+    rc = os.system('apt-get update')
+    if rc != 0:
+        logging.error('apt-get update failed.')
+
+    # Controller Area Network utilities
+    rc = os.system('apt-get install -y can-utils')
+    if rc != 0:
+        logging.error('apt-get install can-untils failed.')
+
+    # I2C tools for UPS HAT
+    rc = os.system('apt-get install i2c-tools')
+    if rc != 0:
+        logging.error('apt-get install i2c-tools failed.')
+
+    # install python packages
+    rc = os.system('pip3 install --upgrade python-can')
+    if rc != 0:
+        logging.error('pip3 install python-can failed')
+
+    # modify /boot/config.txt if required
+    bootCfg = []
+    bootCfg.append(CfgLine('# Waveshare RS485 CAN HAT mcp2515 kernel '
+                           'driver\n'))
+    bootCfg.append(CfgLine('dtparam=spi=on\n'))
+    # RS485 CAN HAT - 12M crystal version
+    bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,'
+                           'interrupt=25,spimaxfrequency=2000000\n'))
+    add_lines('/boot/config.txt', bootCfg)
+
+    logging.info('*** End main-install ***')
+    return 0

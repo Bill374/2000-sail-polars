@@ -9,36 +9,18 @@ Error codes
 2 - script was called with an unrecognised parameter
 3 - unable to establish a connection to Github
 '''
-# Required for parsing command line
+
 import sys
 import getopt
-# Required for accessing O/S filesystem
 import os
-# Required for chmod permissions
-import stat
-# Required for http connection and download from Github
+#import stat
 import requests
-# Required for downloading files
 import wget
 import logging
 
-
-# Initialise installation messaging
-VERBOSE = False
-
-
-# default directory to install the logger
 DIRECTORY = '/opt/RKR-Logger'
-
-# default Github branch to pull from
 BRANCH = 'master'
-
-
-# syntax for calling the installer
-def usage():
-    '''not sure why this is defined as a function.'''
-    print('install-RKR-Logger [-v] [-d <install directory>] '
-          '[-b <Github branch>] [--verbose]')
+USAGE = 'install-RKR-Logger [-d <install directory>] [-b <Github branch>]'
 
 
 # Parse the arguments passed to the script
@@ -48,19 +30,15 @@ def usage():
 # parameters and just leave that to the main installer.
 # We can make that decision later.
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "vhd:b:", ["verbose", "help"])
-except getopt.GetoptError as err:
-    # Something went wrong, found an unexpected argument
-    print(err)
-    print('Expected usage')
-    usage()
+    opts, args = getopt.getopt(sys.argv[1:], 'hd:b:', ['help'])
+except getopt.GetoptError:
+    logging.error('Unexpected argument.')
+    logging.info(USAGE)
     sys.exit(2)
 
 for opt, arg in opts:
-    if opt in ("-v", "--verbose"):
-        VERBOSE = True
-    elif opt in ("-h", "--help"):
-        usage()
+    if opt in ("-h", "--help"):
+        print(USAGE)
         sys.exit(0)
     elif opt == '-d':
         DIRECTORY = arg
@@ -68,7 +46,6 @@ for opt, arg in opts:
         BRANCH = arg
 
 logging.info('*** Installing Rum Kist Racing NMEA2000 Logger ***')
-logging.info('')
 logging.info('*** Start install-RKR-Logger ***')
 
 # Check for access to Github.
@@ -81,7 +58,6 @@ except requests.ConnectionError as ex:
     logging.error('Unable to establish connection to Github.')
     logging.error(ex)
     sys.exit(3)
-
 logging.info('Github is responding - starting installation')
 
 # A good check to include here before executing anything else is to find out
@@ -116,25 +92,23 @@ logging.info('Downloading from ' + GIT_HUB_URL)
 
 # Get the real installer
 logging.info('Getting main-install script')
-fileName = wget.download(GIT_HUB_URL + '/Installation/main-install',
+fileName = wget.download(GIT_HUB_URL + '/Installation/pi-install',
                          out=directory)
-logging.info('')
-logging.info('Making main-install executable by user group and world')
-st = os.stat('main-install')
-os.chmod('main-install',
-         st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-# execute the installer
+#logging.info('Making main-install executable by user group and world')
+#st = os.stat('main-install')
+#os.chmod('main-install',
+#         st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
 logging.info('Executing main-install')
-logging.info('')
-if VERBOSE:
-    rc = os.system('./main-install -v -g ' + GIT_HUB_URL)
-else:
-    rc = os.system('./main-install -g ' + GIT_HUB_URL)
-logging.info('')
+#rc = os.system('./main-install -g ' + GIT_HUB_URL)
+
+import pi_install
+rc = pi_install.main(GIT_HUB_URL)
+
 logging.info('Finished executing main-install')
 
 if rc != 0:
-    logging.info('Something went wrong in main-install')
+    logging.error('Something went wrong in main-install')
     sys.exit(rc)
 
 logging.info('*** End install-RKR-Logger ***')
