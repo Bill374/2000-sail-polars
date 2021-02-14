@@ -1,5 +1,6 @@
 # manifest of files to install on Pi
-test/receiveOne.py
-test/sendOne.py
-test/logTen.py
+UPS/ups_lite.py
+UPS/power_monitor.py
+Logger/nmea.py
+Installation/pi_install.py
 # end of manifest
