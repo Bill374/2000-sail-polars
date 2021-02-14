@@ -13,6 +13,80 @@ import urllib3
 import configparser
 
 
+def install_linux_packages():
+    """
+    Install required linux packages listed in install.cfg.
+
+    apt-get update
+    update is used to resynchronize the package index files from their sources.
+    The indexes of available packages are fetched from the location(s)
+    specified in /etc/apt/sources.list.  An update should always be performed
+    before an upgrade.
+
+    apt-get upgrade
+    upgrade is used to install the newest versions of all packages currently
+    installed on the system from the sources enumerated in
+    /etc/apt/sources.list.  Packages currently installed with new versions
+    available are retrieved and upgraded; under no circumstances are currently
+    installed packages removed, or packages not already installed retrieved
+    and installed. New versions of currently installed packages that cannot be
+    upgraded without changing the install status of another package will be
+    left at their current version.
+
+    apt-get install -y {package}
+    Called for each package listed in install.cfg.  -y option forces a yes too
+    all prompts during the install process.
+
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
+    """
+    config = configparser.ConfigParser()
+    config.read('install.cfg')
+
+    try:
+        linux_packages = config.get('LINUX', 'packages')
+    except configparser.NoSectionError:
+        logging.error('LINUX section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error('No list of LINUX packages found in install.cfg')
+        return -1
+
+    package_list = linux_packages.splitlines(False)
+    package_list = list(filter(None, package_list))
+
+    logging.info('Update Linux package index.')
+    rc = os.system('apt-get update')
+    if not rc:
+        logging.info('Update Linux package index: SUCCESS')
+    else:
+        logging.error('Update Linux index: FAIL')
+        return -1
+
+    logging.info('Upgrade existing Linux packages.')
+    rc = os.system('apt-get upgrade -y')
+    if not rc:
+        logging.info('Upgrade existing Linux packages: SUCCESS')
+    else:
+        logging.error('Upgrade existing Linux packages: FAIL')
+        return -1
+
+    for package in package_list:
+        logging.info(f'Installing Linux package {package}.')
+        rc = os.system(f'apt-get install -y {package}')
+        if not rc:
+            logging.info(f'Installing Linux package {package}: SUCCESS')
+        else:
+            logging.error(f'Installing Linux package {package}: FAIL')
+            return -1
+
+    return 0
+
+
 def install_python_modules():
     """
     Install required python modules listed in install.cfg.
@@ -24,7 +98,6 @@ def install_python_modules():
         -1 : error
 
     """
-    logging.basicConfig(level=logging.INFO)
     config = configparser.ConfigParser()
     config.read('install.cfg')
 
@@ -48,8 +121,6 @@ def install_python_modules():
         else:
             logging.error(f'Installing Python module {module}: FAIL')
             return -1
-        print(f'pip install --upgrade {module}')
-        print(f'Return code: {rc}')
 
     return 0
 
@@ -166,26 +237,17 @@ def main(git_hub_url):
             logging.info('downloaded ' + fileName)
     manifest.close()
 
-    # install apt dependencies
-    logging.inf('Installing apt dependencies')
-    rc = os.system('apt-get update')
-    if rc != 0:
-        logging.error('apt-get update failed.')
+    logging.info('*** Linux Packages ***')
+    rc = install_linux_packages()
+    if not rc:
+        logging.info('Linux packages successfully installed.')
+    else:
+        logging.error('Error installing Linux packages.')
 
-    # Controller Area Network utilities
-    rc = os.system('apt-get install -y can-utils')
-    if rc != 0:
-        logging.error('apt-get install can-untils failed.')
-
-    # I2C tools for UPS HAT
-    rc = os.system('apt-get install i2c-tools')
-    if rc != 0:
-        logging.error('apt-get install i2c-tools failed.')
-
-    # install python packages
+    logging.info('*** Python Modules ***')
     rc = install_python_modules()
     if not rc:
-        logging.info('Python modules successully installed.')
+        logging.info('Python modules successfully installed.')
     else:
         logging.error('Error installing python modules.')
 
