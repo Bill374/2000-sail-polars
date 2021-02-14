@@ -10,6 +10,48 @@ import logging
 import os
 import wget
 import urllib3
+import configparser
+
+
+def install_python_modules():
+    """
+    Install required python modules listed in install.cfg.
+
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
+    """
+    logging.basicConfig(level=logging.INFO)
+    config = configparser.ConfigParser()
+    config.read('install.cfg')
+
+    try:
+        python_modules = config.get('PYTHON', 'modules')
+    except configparser.NoSectionError:
+        logging.error('PYTHON section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error('No list of PYTHON modules found in install.cfg')
+        return -1
+
+    module_list = python_modules.splitlines(False)
+    module_list = list(filter(None, module_list))
+
+    for module in module_list:
+        logging.info(f'Installing Python module {module}.')
+        rc = os.system(f'pip3 install --upgrade {module}')
+        if not rc:
+            logging.info(f'Installing Python module {module}: SUCCESS')
+        else:
+            logging.error(f'Installing Python module {module}: FAIL')
+            return -1
+        print(f'pip install --upgrade {module}')
+        print(f'Return code: {rc}')
+
+    return 0
 
 
 class CfgLine:
@@ -141,9 +183,11 @@ def main(git_hub_url):
         logging.error('apt-get install i2c-tools failed.')
 
     # install python packages
-    rc = os.system('pip3 install --upgrade python-can')
-    if rc != 0:
-        logging.error('pip3 install python-can failed')
+    rc = install_python_modules()
+    if not rc:
+        logging.info('Python modules successully installed.')
+    else:
+        logging.error('Error installing python modules.')
 
     # modify /boot/config.txt if required
     bootCfg = []
