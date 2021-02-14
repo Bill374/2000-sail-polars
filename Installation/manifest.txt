@@ -2,4 +2,5 @@
 UPS/ups_lite.py
 UPS/power_monitor.py
 Logger/nmea.py
+Installation/pi_install.py
 # end of manifest
