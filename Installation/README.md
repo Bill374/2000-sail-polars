@@ -63,6 +63,8 @@ Then restart the raspberry pi `sudo reboot`
 ```
 sudo apt-get install python-pip
 sudo pip install python-can
+sudo pip install RPi.GPIO
+sudo pip install smbus
 ```
 ## Installing the logger
 
