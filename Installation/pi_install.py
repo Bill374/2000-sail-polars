@@ -125,78 +125,95 @@ def install_python_modules():
     return 0
 
 
-class CfgLine:
-    """
-    Line to add to a config file.
-    The boolean found indicate if the line is already in the file.
-    """
-
-    def __init__(self, line):
-        self.line = line
-        self.found = False
-
-    def __str__(self):
-        output = self.line
-        if self.found:
-            output = output + ', True'
-        else:
-            output = output + ', False'
-        return output
-
-
-def add_lines(file_name, lines):
+def add_lines(section):
     """
     Append lines to the end of a text file.
 
+    The section of install.cfg is expected to contain exactly two options
+    file:
+        The full path to the file to be edited.
+    lines:
+        The lines to be appended to the file.
+
     Each line will only be appended if it is not already found in the file.
-    If the file is not found or cannot be opened an error is logged, but no
-    error code is returned.
+    If the file is not found or cannot be opened an error is logged.
 
-    Parameters:
-        file_name (str): The full path and name of the file to edited
-        lines (list): The lines to be added to the file
+    Parameters
+    ----------
+    section : str
+        The section in install.cfg to read.
 
-    Returns:
-        No return value
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
     """
-    if lines is None:
-        logging.error(f'No lines given to be added to {file_name}')
-        return
+    config = configparser.ConfigParser(comment_prefixes=(';'))
+    config.read('install.cfg')
+
+    # Get information from the section of install.cfg
+    try:
+        file_name = config.get(section, 'file_name')
+    except configparser.NoSectionError:
+        logging.error(f'{section} not found in install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error(f'file_name option not found for {section} in '
+                      'install.cfg')
+        return -1
+    try:
+        lines = config.get(section, 'lines')
+    except configparser.NoOptionError:
+        logging.error(f'lines option not found for {section} in install.cfg')
+        return -1
+
+    # build a list of dictionaries
+    line_list = lines.splitlines(False)
+    lines = []
+    for x in filter(None, line_list):
+        lines.append({"line": x, "found": False})
+
+    # Check if the lines already exist in the file
     logging.info(f'Reading {file_name}, checking if updates required.')
     try:
         file_to_edit = open(file_name, 'r')
     except IOError:
         logging.error(f'Cannot open {file_name} for read')
         return
-    for source in file_to_edit:
-        for target in lines:
-            if source == target.line:
-                logging.info('Found ' + target.line.strip('\n'))
-                target.found = True
+    for file_line in file_to_edit:
+        for i, source in enumerate(lines):
+            if file_line.strip('\n') == source["line"]:
+                logging.info(f'Found: {source["line"]}')
+                lines[i]["found"] = True
     file_to_edit.close()
 
     # Are there any lines to be added to file_name?
     need_update = False
-    for target in lines:
-        if not target.found:
+    for source in lines:
+        if not source["found"]:
             need_update = True
-
-    if need_update:
-        logging.info(f'Writing to {file_name}')
-        try:
-            file_to_edit = open(file_name, 'a')
-        except IOError:
-            logging.error(f'Cannot open {file_name} for write')
-            return
-        file_to_edit.write('\n# RKR Logger\n')
-        for target in lines:
-            if not target.found:
-                logging.info('Writing ' + target.line.strip('\n'))
-                file_to_edit.write(target.line)
-        file_to_edit.close()
-        logging.info(f'Finished modifying {file_name}')
-    else:
+    if not need_update:
         logging.info(f'No updates needed to {file_name}')
+        return 0
+
+    # Make the required updates to the file
+    logging.info(f'Writing to {file_name}')
+    try:
+        file_to_edit = open(file_name, 'a')
+    except IOError:
+        logging.error(f'Cannot open {file_name} for write')
+        return -1
+    file_to_edit.write('\n# RKR Logger\n')
+    for source in lines:
+        if not source["found"]:
+            logging.info(f'Writing: {source["line"]}')
+            file_to_edit.write(f'{source["line"]}\n')
+    file_to_edit.close()
+    logging.info(f'Finished modifying {file_name}')
+
+    return 0
 
 
 def main(git_hub_url):
@@ -251,15 +268,14 @@ def main(git_hub_url):
     else:
         logging.error('Error installing python modules.')
 
-    # modify /boot/config.txt if required
-    bootCfg = []
-    bootCfg.append(CfgLine('# Waveshare RS485 CAN HAT mcp2515 kernel '
-                           'driver\n'))
-    bootCfg.append(CfgLine('dtparam=spi=on\n'))
-    # RS485 CAN HAT - 12M crystal version
-    bootCfg.append(CfgLine('dtoverlay=mcp2515-can0,oscillator=12000000,'
-                           'interrupt=25,spimaxfrequency=2000000\n'))
-    add_lines('/boot/config.txt', bootCfg)
+    logging.info('*** Update Files ***')
+    sections = ['BOOT-CONFIG']
+    for section in sections:
+        rc = add_lines(section)
+        if not rc:
+            logging.info(f'{section} successfully executed.')
+        else:
+            logging.error(f'Error executing {section}.')
 
     logging.info('*** End main-install ***')
     return 0
