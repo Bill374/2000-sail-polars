@@ -51,17 +51,17 @@ for opt, arg in opts:
 # latest version?
 
 # Make sure we have a nice clean empty directory for our install
-logging.info(f'Installing to directory: {directory}')
-if os.path.isdir(directory):
-    logging.info('Installation directory already exists deleting directory '
-                 'and contents.')
-    os.system(f'rm -rf {directory}')
-elif os.path.isfile(directory):
-    logging.info('A file that is not a directory exists with the name '
-                 f'{directory}.  Removing file')
-    os.system(f'rm {directory}')
-logging.info(f'Creating directory: {directory}')
-os.system(f'mkdir {directory}')
+# logging.info(f'Installing to directory: {directory}')
+# if os.path.isdir(directory):
+#     logging.info('Installation directory already exists deleting directory '
+#                  'and contents.')
+#     os.system(f'rm -rf {directory}')
+# elif os.path.isfile(directory):
+#     logging.info('A file that is not a directory exists with the name '
+#                  f'{directory}.  Removing file')
+#     os.system(f'rm {directory}')
+# logging.info(f'Creating directory: {directory}')
+# os.system(f'mkdir {directory}')
 logging.info('Change working directory to install directory')
 os.chdir(directory)
 if directory != os.getcwd():
@@ -76,20 +76,19 @@ logging.info(f'Installing from Github branch: {branch}')
 git_hub_url = (f'{PROJECT}{BRANCH}/')
 logging.info(f'Downloading from: {git_hub_url}')
 
-# Get the real installer
-logging.info('Getting main-install script')
-fileName = wget.download(f'{git_hub_url}/Installation/pi-install',
-                         out=directory)
+# Get the real installer and install.cfg
 try:
-    file_to_get = f'{git_hub_url}/Installation/pi-install'
+    file_to_get = f'{git_hub_url}Installation/pi_install.py'
+    logging.info(f'Copying {file_to_get}')
     fileName = wget.download(file_to_get, out=directory)
     logging.info(f'Copying {file_to_get}: SUCCESS')
     logging.info(f'{fileName}')
-    file_to_get = f'{git_hub_url}/Installation/install.cfg'
+    file_to_get = f'{git_hub_url}Installation/install.cfg'
+    logging.info(f'Copying {file_to_get}')
     fileName = wget.download(file_to_get, out=directory)
     logging.info(f'Copying {file_to_get}: SUCCESS')
     logging.info(f'{fileName}')
-except wget.HTTPError as http_error:
+except Exception as http_error:
     logging.error(f'Copying {file_to_get}: FAIL')
     logging.error(http_error)
     sys.exit(-1)

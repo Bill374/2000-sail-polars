@@ -58,7 +58,7 @@ def copy_files(git_hub_url, install_directory, option):
         fileToGet = f'{git_hub_url}{file}'
         try:
             fileName = wget.download(fileToGet, out=install_directory)
-        except wget.HTTPError as http_error:
+        except Exception as http_error:
             logging.error(f'Copying {file}: FAIL')
             logging.error(http_error)
             return -1
