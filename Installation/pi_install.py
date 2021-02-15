@@ -90,6 +90,7 @@ def copy_files(option):
             os.remove(name_only)
         try:
             fileName = wget.download(fileToGet, out=install_directory)
+            print('')
         except Exception as http_error:
             logging.error(f'Copying {file}: FAIL')
             logging.error(http_error)
@@ -147,7 +148,7 @@ def install_linux_packages():
     package_list = list(filter(None, package_list))
 
     logging.info('Update Linux package index.')
-    rc = os.system('apt-get update')
+    rc = os.system('apt-get -qy update')
     if not rc:
         logging.info('Update Linux package index: SUCCESS')
     else:
@@ -155,7 +156,7 @@ def install_linux_packages():
         return -1
 
     logging.info('Upgrade existing Linux packages.')
-    rc = os.system('apt-get upgrade -y')
+    rc = os.system('apt-get -qy upgrade')
     if not rc:
         logging.info('Upgrade existing Linux packages: SUCCESS')
     else:
@@ -164,7 +165,7 @@ def install_linux_packages():
 
     for package in package_list:
         logging.info(f'Installing Linux package {package}.')
-        rc = os.system(f'apt-get install -y {package}')
+        rc = os.system(f'apt-get -qy install {package}')
         if not rc:
             logging.info(f'Installing Linux package {package}: SUCCESS')
         else:
@@ -256,7 +257,7 @@ def add_lines(section):
         logging.error(f'lines option not found for {section} in install.cfg')
         return -1
 
-    logging.info(f'Building a list of lines to be addes to {file_name}')
+    logging.info(f'Building a list of lines to be added to {file_name}')
     line_list = lines.splitlines(False)
     lines = []
     for x in filter(None, line_list):
