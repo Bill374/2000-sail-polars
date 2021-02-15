@@ -9,21 +9,15 @@ Created on Sun Jan 31 21:24:52 2021
 import logging
 import os
 import wget
-import urllib3
 import configparser
 
 
-def copy_files(git_hub_url, install_directory, option):
+def copy_files(option):
     """
     Copy files from GitHub to the Pi.
 
     Parameters
     ----------
-    git_hub_url : str
-        Complete URL to the raw files in GitHub.
-        Must include both the repository and the branch
-    install_directory : str
-        Full path to the directory on the Pi to save the files
     option : str
         The option in the FILES section of install.cfg that lists the files to
         be copied.
@@ -38,7 +32,9 @@ def copy_files(git_hub_url, install_directory, option):
     config = configparser.ConfigParser()
     config.read('install.cfg')
 
+    # List of files to copy
     try:
+        logging.info(f'Reading [FILES], {option} from install.cfg')
         files = config.get('FILES', option)
     except configparser.NoSectionError:
         logging.error('FILES section missing from install.cfg')
@@ -47,15 +43,51 @@ def copy_files(git_hub_url, install_directory, option):
         logging.error(f'No list of {option} files found in install.cfg')
         return -1
 
+    # GitHub location
+    try:
+        logging.info('Reading [GIT-HUB], git hub URL from install.cfg')
+        git_hub_url = config.get('GIT-HUB', 'url')
+    except configparser.NoSectionError:
+        logging.error('GIT-HUB section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error('No url found in install.cfg')
+        return -1
+
+    # Install directory
+    try:
+        logging.info('Reading [DEFAULT], install_directory from install.cfg')
+        install_directory = config.get('DEFAULT', 'install_directory')
+    except configparser.NoSectionError:
+        logging.error('DEFAULT section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error('No default_directory found in install.cfg')
+        return -1
+
+    # Check that the install directory exists and is a directory.
+    if not os.path.isdir(install_directory):
+        logging.info(f'{install_directory} does not exist.')
+        try:
+            os.makedirs(install_directory)
+            logging.info(f'makedirs({install_directory}): SUCCESS')
+        except OSError:
+            logging.error(f'makedirs({install_directory}): FAIL')
+
     logging.info(f'Copying {option} files from {git_hub_url}')
     logging.info(f'Copying {option} files to {install_directory}')
-
     file_list = files.splitlines(False)
     file_list = list(filter(None, file_list))
-
+    # copy each file
     for file in file_list:
         logging.info(f'Copying {file}')
         fileToGet = f'{git_hub_url}{file}'
+        # if the file already exists in the install directory, remove it.
+        name_only = file.split('/')[-1]
+        if os.path.exists(f'{install_directory}/{name_only}'):
+            logging.info(f'{file} already exists in {install_directory}. '
+                         'Deleting.')
+            os.remove(name_only)
         try:
             fileName = wget.download(fileToGet, out=install_directory)
         except Exception as http_error:
@@ -271,7 +303,7 @@ def add_lines(section):
     return 0
 
 
-def main(git_hub_url):
+def main():
     """
     Main installation function.
 
@@ -280,11 +312,19 @@ def main(git_hub_url):
     None.
 
     """
-    logging.info('*** Start main-install ***')
-    directory = os.getcwd()
+    logging.info('*** Start pi-install ***')
+
+    # Check a few things before we start.
+    if not os.path.isfile('install.cfg'):
+        logging.error('install.cfg not found in the current directory.')
+        return -1
+    logging.info('Found install.cfg')
+
+    # Check that the is the most up-to-date version of this script
+    # How best to do that?
 
     logging.info('*** Core Files ***')
-    rc = copy_files(git_hub_url, directory, 'core')
+    rc = copy_files('core')
     if not rc:
         logging.info('Core files successfully installed.')
     else:
@@ -317,5 +357,10 @@ def main(git_hub_url):
             logging.error(f'Error executing {section}.')
             return rc
 
-    logging.info('*** End main-install ***')
+    logging.info('*** End pi-install ***')
     return 0
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main()
