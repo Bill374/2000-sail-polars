@@ -95,14 +95,17 @@ See section '[PYTHON]` in `install.cfg'
 
 ### Download a file from GitHub
 
-With the Pi Zero connected to WiFi code files can be downloaded directly from GitHub.
+With the Pi Zero connected to WiFi files can be downloaded directly from GitHub using curl.  In order to start the install process two files will need to be retrieved this way. 
 ```
-curl --output Readme https://raw.githubusercontent.com/Bill374/2000-sail-polars/main/Installation/Readme.md
+curl --output pi_install.py https://raw.githubusercontent.com/Bill374/2000-sail-polars/main/Installation/pi_install.py?RANDOM
+curl --output install.cfg https://raw.githubusercontent.com/Bill374/2000-sail-polars/main/Installation/install.cfg?RANDOM
+
 ```
 
 `/main/` is the branch of the repository
 `/Installation/` is a directory path
-`Readme.md` is this file
+`pi_install.py` is the file
+`?RANDOM` prevents any previously cached version of the file from being used and ensures that the latest copy is always brought back from the server.
 
 ### install.cfg
 
