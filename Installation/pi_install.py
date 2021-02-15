@@ -375,5 +375,5 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(filename='/home/pi/pi_install.log', level=logging.INFO)
     main()

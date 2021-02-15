@@ -15,18 +15,27 @@ import os
 import logging
 import ups_lite
 
-logging.info('Start external power monitoriing.')
-ups = ups_lite.UPS()
-shutdown_started = False
 
-try:
-    while True:
-        sleep(5)
-        if not shutdown_started and not ups.external_power():
-            logging.info('External power disconnected.')
-            logging.info('Starting shutdown process.')
-            shutdown_started = True
-            # Any actions we need to take before shutdown go here
-            os.system('systemctl poweroff')
-except KeyboardInterrupt:
-    logging.info('power_monitor.py interupted and terminated.')
+def main():
+    logging.info('Start external power monitoriing.')
+    ups = ups_lite.UPS()
+    shutdown_started = False
+
+    try:
+        while True:
+            sleep(5)
+            if not shutdown_started and not ups.external_power():
+                logging.info('External power disconnected.')
+                logging.info('Starting shutdown process.')
+                shutdown_started = True
+                # Any actions we need to take before shutdown go here
+                os.system('systemctl poweroff')
+    except KeyboardInterrupt:
+        logging.info('power_monitor.py interupted and terminated.')
+        return 0
+
+
+if __name__ == '__main__':
+    logging.basicConfig(filename='/home/pi/power_monitor.log',
+                        level=logging.INFO)
+    main()
