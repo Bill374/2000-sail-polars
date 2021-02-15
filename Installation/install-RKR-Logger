@@ -13,22 +13,22 @@ Error codes
 import sys
 import getopt
 import os
-#import stat
-import requests
 import wget
 import logging
 
-DIRECTORY = '/opt/RKR-Logger'
-BRANCH = 'master'
+logging.basicConfig(level=logging.INFO)
+logging.info('*** Installing Rum Kist Racing NMEA2000 Logger ***')
+logging.info('*** Start install-RKR-Logger ***')
+
+DIRECTORY = '/home/pi/RKR-Logger'
+PROJECT = 'https://raw.githubusercontent.com/Bill374/2000-sail-polars/'
+BRANCH = 'main'
 USAGE = 'install-RKR-Logger [-d <install directory>] [-b <Github branch>]'
 
+directory = DIRECTORY
+branch = BRANCH
 
 # Parse the arguments passed to the script
-# If any of them are not recognised exit with an error
-# Since this script downloads and runs the the main-install which might need
-# more parameters.  It might be better if it did not terminate for unknown
-# parameters and just leave that to the main installer.
-# We can make that decision later.
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'hd:b:', ['help'])
 except getopt.GetoptError:
@@ -41,24 +41,9 @@ for opt, arg in opts:
         print(USAGE)
         sys.exit(0)
     elif opt == '-d':
-        DIRECTORY = arg
+        directory = arg
     elif opt == '-b':
-        BRANCH = arg
-
-logging.info('*** Installing Rum Kist Racing NMEA2000 Logger ***')
-logging.info('*** Start install-RKR-Logger ***')
-
-# Check for access to Github.
-# If there is no access to Github there is no point in continuing
-URL = 'https://rawgithubusercontent.com'
-TIMEOUT = 5
-try:
-    r = requests.get(URL, timeout=TIMEOUT)
-except requests.ConnectionError as ex:
-    logging.error('Unable to establish connection to Github.')
-    logging.error(ex)
-    sys.exit(3)
-logging.info('Github is responding - starting installation')
+        branch = arg
 
 # A good check to include here before executing anything else is to find out
 # if this is the latest version of install-rkr-logger
@@ -66,46 +51,51 @@ logging.info('Github is responding - starting installation')
 # latest version?
 
 # Make sure we have a nice clean empty directory for our install
-logging.info('Installing to directory: ' + DIRECTORY)
-if os.path.isdir(DIRECTORY):
-    logging.info('Installation directory already exists '
-                 'deleting directory and contents.')
-    os.system('rm -rf ' + DIRECTORY)
-elif os.path.isfile(DIRECTORY):
-    logging.info('A file that is not a directory exists with the name ' +
-                 DIRECTORY + ' removing file')
-    os.system('rm ' + DIRECTORY)
-logging.info('Creating directory: ' + DIRECTORY)
-os.system('mkdir ' + DIRECTORY)
+logging.info(f'Installing to directory: {directory}')
+if os.path.isdir(directory):
+    logging.info('Installation directory already exists deleting directory '
+                 'and contents.')
+    os.system(f'rm -rf {directory}')
+elif os.path.isfile(directory):
+    logging.info('A file that is not a directory exists with the name '
+                 f'{directory}.  Removing file')
+    os.system(f'rm {directory}')
+logging.info(f'Creating directory: {directory}')
+os.system(f'mkdir {directory}')
 logging.info('Change working directory to install directory')
-os.chdir(DIRECTORY)
-directory = os.getcwd()
-logging.info('Install directory: ' + DIRECTORY)
+os.chdir(directory)
+if directory != os.getcwd():
+    logging.error(f'Not in the expected directory {directory}')
+    sys.exit(-1)
+logging.info(f'Install directory: {directory}')
 
 # download the real installer that does all the work from GitHub
-logging.info('Installing from Github branch: ' + BRANCH)
+logging.info(f'Installing from Github branch: {branch}')
 
 # Path to the Github repository
-GIT_HUB_URL = ('https://raw.githubusercontent.com/Bill374/2000-sail-polars/'
-               + BRANCH + '/')
-logging.info('Downloading from ' + GIT_HUB_URL)
+git_hub_url = (f'{PROJECT}{BRANCH}/')
+logging.info(f'Downloading from: {git_hub_url}')
 
 # Get the real installer
 logging.info('Getting main-install script')
-fileName = wget.download(GIT_HUB_URL + '/Installation/pi-install',
+fileName = wget.download(f'{git_hub_url}/Installation/pi-install',
                          out=directory)
-#logging.info('Making main-install executable by user group and world')
-#st = os.stat('main-install')
-#os.chmod('main-install',
-#         st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
-logging.info('Executing main-install')
-#rc = os.system('./main-install -g ' + GIT_HUB_URL)
+try:
+    file_to_get = f'{git_hub_url}/Installation/pi-install'
+    fileName = wget.download(file_to_get, out=directory)
+    logging.info(f'Copying {file_to_get}: SUCCESS')
+    logging.info(f'{fileName}')
+    file_to_get = f'{git_hub_url}/Installation/install.cfg'
+    fileName = wget.download(file_to_get, out=directory)
+    logging.info(f'Copying {file_to_get}: SUCCESS')
+    logging.info(f'{fileName}')
+except wget.HTTPError as http_error:
+    logging.error(f'Copying {file_to_get}: FAIL')
+    logging.error(http_error)
+    sys.exit(-1)
 
 import pi_install
-rc = pi_install.main(GIT_HUB_URL)
-
-logging.info('Finished executing main-install')
+rc = pi_install.main(git_hub_url)
 
 if rc != 0:
     logging.error('Something went wrong in main-install')

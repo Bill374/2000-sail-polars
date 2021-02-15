@@ -13,6 +13,61 @@ import urllib3
 import configparser
 
 
+def copy_files(git_hub_url, install_directory, option):
+    """
+    Copy files from GitHub to the Pi.
+
+    Parameters
+    ----------
+    git_hub_url : str
+        Complete URL to the raw files in GitHub.
+        Must include both the repository and the branch
+    install_directory : str
+        Full path to the directory on the Pi to save the files
+    option : str
+        The option in the FILES section of install.cfg that lists the files to
+        be copied.
+
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
+    """
+    config = configparser.ConfigParser()
+    config.read('install.cfg')
+
+    try:
+        files = config.get('FILES', option)
+    except configparser.NoSectionError:
+        logging.error('FILES section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error(f'No list of {option} files found in install.cfg')
+        return -1
+
+    logging.info(f'Copying {option} files from {git_hub_url}')
+    logging.info(f'Copying {option} files to {install_directory}')
+
+    file_list = files.splitlines(False)
+    file_list = list(filter(None, file_list))
+
+    for file in file_list:
+        logging.info(f'Copying {file}')
+        fileToGet = f'{git_hub_url}{file}'
+        try:
+            fileName = wget.download(fileToGet, out=install_directory)
+        except wget.HTTPError as http_error:
+            logging.error(f'Copying {file}: FAIL')
+            logging.error(http_error)
+            return -1
+        logging.info(f'Copying {file}: SUCCESS')
+        logging.info(f'{fileName}')
+
+    return 0
+
+
 def install_linux_packages():
     """
     Install required linux packages listed in install.cfg.
@@ -44,7 +99,7 @@ def install_linux_packages():
         -1 : error
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(comment_prefixes=(';'))
     config.read('install.cfg')
 
     try:
@@ -98,7 +153,7 @@ def install_python_modules():
         -1 : error
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(comment_prefixes=(';'))
     config.read('install.cfg')
 
     try:
@@ -226,33 +281,15 @@ def main(git_hub_url):
 
     """
     logging.info('*** Start main-install ***')
-
     directory = os.getcwd()
 
-    logging.info(f'installing from {git_hub_url}')
-    logging.info(f'installing to {directory}')
-
-    # download all the files listed in the manifest file
-    logging.info('Retrieving manifest of files to install')
-    fileName = wget.download(f'{git_hub_url} Installation/manifest.txt')
-    logging.info('')
-    logging.info(f'downloaded {fileName}')
-    manifest = open('manifest.txt', 'r')
-    http = urllib3.PoolManager()
-    for source in manifest:
-        if source[0] != '#':
-            fileToGet = git_hub_url + source.strip('\n')
-            try:
-                req = http.request('GET', fileToGet)
-            except urllib3.exceptions.HTTPError as http_error:
-                logging.info('unable to find file ' + source.strip('\n') +
-                             ' listed in manifest')
-                logging.info(http_error)
-                return 3
-            fileName = wget.download(fileToGet, out=directory)
-            logging.info('')
-            logging.info('downloaded ' + fileName)
-    manifest.close()
+    logging.info('*** Core Files ***')
+    rc = copy_files(git_hub_url, directory, 'core')
+    if not rc:
+        logging.info('Core files successfully installed.')
+    else:
+        logging.error('Error installing core files.')
+        return rc
 
     logging.info('*** Linux Packages ***')
     rc = install_linux_packages()
@@ -260,6 +297,7 @@ def main(git_hub_url):
         logging.info('Linux packages successfully installed.')
     else:
         logging.error('Error installing Linux packages.')
+        return rc
 
     logging.info('*** Python Modules ***')
     rc = install_python_modules()
@@ -267,6 +305,7 @@ def main(git_hub_url):
         logging.info('Python modules successfully installed.')
     else:
         logging.error('Error installing python modules.')
+        return rc
 
     logging.info('*** Update Files ***')
     sections = ['BOOT-CONFIG']
@@ -276,6 +315,7 @@ def main(git_hub_url):
             logging.info(f'{section} successfully executed.')
         else:
             logging.error(f'Error executing {section}.')
+            return rc
 
     logging.info('*** End main-install ***')
     return 0
