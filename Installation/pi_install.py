@@ -85,9 +85,9 @@ def copy_files(option):
         # if the file already exists in the install directory, remove it.
         name_only = file.split('/')[-1]
         if os.path.exists(f'{install_directory}/{name_only}'):
-            logging.info(f'{file} already exists in {install_directory}. '
+            logging.info(f'{name_only} already exists in {install_directory}. '
                          'Deleting.')
-            os.remove(name_only)
+            os.remove(f'{install_directory}/{name_only}')
         try:
             fileName = wget.download(fileToGet, out=install_directory)
             print('')
