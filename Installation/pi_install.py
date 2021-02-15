@@ -256,7 +256,7 @@ def add_lines(section):
         logging.error(f'lines option not found for {section} in install.cfg')
         return -1
 
-    # build a list of dictionaries
+    logging.info(f'Building a list of lines to be addes to {file_name}')
     line_list = lines.splitlines(False)
     lines = []
     for x in filter(None, line_list):
@@ -264,10 +264,14 @@ def add_lines(section):
 
     # If the file does not exist, create it
     if not os.path.isfile(file_name):
-        basedir = os.path.dirname(file_name)
-        if not os.path.exists(basedir):
-            os.makedirs(basedir)
-            open(file_name, 'a').close()
+        logging.info(f'{file_name} does not exist.')
+        base_directory = os.path.dirname(file_name)
+        if not os.path.exists(base_directory):
+            logging.info(f'{base_directory} does not exist.')
+            logging.ifno(f'Createing {base_directory}')
+            os.makedirs(base_directory)
+        logging.info(f'Creating {file_name}')
+        open(file_name, 'a').close()
 
     # Check if the lines already exist in the file
     logging.info(f'Reading {file_name}, checking if updates required.')
@@ -275,7 +279,7 @@ def add_lines(section):
         file_to_edit = open(file_name, 'r')
     except IOError:
         logging.error(f'Cannot open {file_name} for read')
-        return
+        return -1
     for file_line in file_to_edit:
         for i, source in enumerate(lines):
             if file_line.strip('\n') == source["line"]:
@@ -357,11 +361,12 @@ def main():
     logging.info('*** Update Files ***')
     sections = ['BOOT-CONFIG', 'ENVIRONMENT']
     for section in sections:
+        logging.info(f'Executing {section}')
         rc = add_lines(section)
         if not rc:
-            logging.info(f'{section} successfully executed.')
+            logging.info(f'{section} executed: SUCCESS')
         else:
-            logging.error(f'Error executing {section}.')
+            logging.error(f'{section} executed: FAIL')
             return rc
 
     logging.info('*** End pi-install ***')
