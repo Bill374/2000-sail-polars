@@ -262,6 +262,13 @@ def add_lines(section):
     for x in filter(None, line_list):
         lines.append({"line": x, "found": False})
 
+    # If the file does not exist, create it
+    if not os.path.isfile(file_name):
+        basedir = os.path.dirname(file_name)
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+            open(file_name, 'a').close()
+
     # Check if the lines already exist in the file
     logging.info(f'Reading {file_name}, checking if updates required.')
     try:
@@ -348,7 +355,7 @@ def main():
         return rc
 
     logging.info('*** Update Files ***')
-    sections = ['BOOT-CONFIG']
+    sections = ['BOOT-CONFIG', 'ENVIRONMENT']
     for section in sections:
         rc = add_lines(section)
         if not rc:
