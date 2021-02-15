@@ -17,7 +17,8 @@ import ups_lite
 
 
 def main():
-    logging.info('Start external power monitoriing.')
+    logger = logging.getLogger('power_monitor')
+    logger.info('Start external power monitoriing.')
     ups = ups_lite.UPS()
     shutdown_started = False
 
@@ -25,17 +26,26 @@ def main():
         while True:
             sleep(5)
             if not shutdown_started and not ups.external_power():
-                logging.info('External power disconnected.')
-                logging.info('Starting shutdown process.')
+                logger.info('External power disconnected.')
+                logger.info('Starting shutdown process.')
                 shutdown_started = True
                 # Any actions we need to take before shutdown go here
-                os.system('systemctl poweroff')
+                # halt, poweroff, reboot
+                rc = os.system('halt')
+                if rc != 0:
+                    logger.error(f'Shutdown failed. return code = {rc}')
+                    return rc
+                logger.info('Shutdown process started successfully.')
+                return 0
     except KeyboardInterrupt:
-        logging.info('power_monitor.py interupted and terminated.')
+        logger.info('Interupted and terminated.')
         return 0
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='/home/pi/power_monitor.log',
+    log_dir = os.getenv('RKRPROCESSLOGS')
+    logging.basicConfig(filename=f'{log_dir}power_monitor.log',
+                        filemode='w',
                         level=logging.INFO)
+    logging.shutdown()
     main()

@@ -375,5 +375,10 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='/home/pi/pi_install.log', level=logging.INFO)
+    logging.basicConfig(level=logging.INFO,
+                        handlers=[
+                            logging.FileHandler("/home/pi/pi_install.log"),
+                            logging.StreamHandler()
+                            ])
+    logging.shutdown()
     main()
