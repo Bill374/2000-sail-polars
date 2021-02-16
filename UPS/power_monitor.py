@@ -47,5 +47,5 @@ if __name__ == '__main__':
     logging.basicConfig(filename=f'{log_dir}power_monitor.log',
                         filemode='w',
                         level=logging.INFO)
-    logging.shutdown()
     main()
+    logging.shutdown()

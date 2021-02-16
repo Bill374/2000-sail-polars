@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 15 19:15:54 2021
+
+@author: wmorland
+
+Current state of the UPS-Lite.
+"""
+
+import ups_lite
+
+
+def main():
+    """
+    Current state of the UPS-Lite.
+
+    External power status
+    UPS Voltage
+    UPS Capacity
+
+    Returns
+    -------
+    None.
+
+    """
+    ups = ups_lite.UPS()
+    print('+--------------------------------+')
+    if ups.external_power():
+        print('| External power: Connnected     |')
+    else:
+        print('| External power: Not Connnected |')
+    print(f'| UPS Voltage:    {ups.voltage():1.2f}           |')
+    print(f'| UPS Capacity:   {int(ups.capacity()):03d}%           |')
+    print('+--------------------------------+')
+
+
+if __name__ == '__main__':
+    main()
