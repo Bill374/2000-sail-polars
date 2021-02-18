@@ -12,6 +12,7 @@ This script is automatically run whenever the Pi is rebooted.
 """
 from time import sleep
 import os
+import subprocess
 import logging
 import ups_lite
 
@@ -20,19 +21,24 @@ def main():
     logger = logging.getLogger('power_monitor')
     logger.info('Start external power monitoriing.')
     ups = ups_lite.UPS()
-    shutdown_started = False
+    logger.info(f'UPS Voltage: {ups.voltage():1.2f}')
+    logger.info(f'UPS Capacity: {int(ups.capacity()):03d}%')
 
     try:
         while True:
             sleep(5)
-            if not shutdown_started and not ups.external_power():
+            if not ups.external_power():
                 logger.info('External power disconnected.')
+                logger.info(f'UPS Voltage: {ups.voltage():1.2f}')
+                logger.info(f'UPS Capacity: {int(ups.capacity()):03d}%')
                 logger.info('Starting shutdown process.')
-                shutdown_started = True
+
                 # Any actions we need to take before shutdown go here
-                # halt, poweroff, reboot
-                rc = os.system('halt')
-                if rc != 0:
+
+                try:
+                    subprocess.run('sudo halt', check=True)
+                except subprocess.CalledProcessError as process_error:
+                    rc = process_error.returncode
                     logger.error(f'Shutdown failed. return code = {rc}')
                     return rc
                 logger.info('Shutdown process started successfully.')
