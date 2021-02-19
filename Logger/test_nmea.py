@@ -23,7 +23,7 @@ class TestStartCanBus(unittest.TestCase):
         ip_call.assert_called_with('sudo ip link set can0 type can '
                                    'bitrate 100000')
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ip link set terminated by '
+                         ['ERROR:nmea:Call to ip link set terminated by '
                           'signal.'],
                          msg='expect ERROR logged when ip link set terminated '
                          'by signal.')
@@ -38,7 +38,7 @@ class TestStartCanBus(unittest.TestCase):
         ip_call.assert_called_with('sudo ip link set can0 type can '
                                    'bitrate 100000')
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ip link set failed.'],
+                         ['ERROR:nmea:Call to ip link set failed.'],
                          msg='expect ERROR logged when ip link set fails.')
         self.assertIsNone(bus, msg='start_can_bus should return None if '
                           'call to ip link set fails.')
@@ -50,7 +50,7 @@ class TestStartCanBus(unittest.TestCase):
             bus = nmea.start_can_bus()
         ip_call.assert_called_with('sudo ifconfig can0 up')
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ifconfig terminated by signal.'],
+                         ['ERROR:nmea:Call to ifconfig terminated by signal.'],
                          msg='expect ERROR logged when ifconfig terminated '
                          'by signal.')
         self.assertIsNone(bus, msg='start_can_bus should return None if '
@@ -69,7 +69,7 @@ class TestStartCanBus(unittest.TestCase):
         with self.assertLogs(level='ERROR') as logs:
             bus = nmea.start_can_bus()
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ifconfig failed.'],
+                         ['ERROR:nmea:Call to ifconfig failed.'],
                          msg='expect ERROR logged when ip link set fails.')
         self.assertIsNone(bus, msg='start_can_bus should return None if '
                           'call to ifconfig fails.')
@@ -103,7 +103,7 @@ class TestStopCanBus(unittest.TestCase):
             rc = nmea.stop_can_bus()
         ip_call.assert_called_with('sudo ifconfig can0 down')
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ifconfig terminated by '
+                         ['ERROR:nmea:Call to ifconfig terminated by '
                           'signal.'],
                          msg='expect ERROR logged when ifcongif terminated by '
                          'signal.')
@@ -117,7 +117,7 @@ class TestStopCanBus(unittest.TestCase):
             rc = nmea.stop_can_bus()
         ip_call.assert_called_with('sudo ifconfig can0 down')
         self.assertEqual(logs.output,
-                         ['ERROR:root:Call to ifconfig failed.'],
+                         ['ERROR:nmea:Call to ifconfig failed.'],
                          msg='expect ERROR logged when ifconfig fails.')
         self.assertIsNone(rc, msg='stop_can_bus should return None if call to'
                           'ifconfig fails.')
@@ -141,46 +141,6 @@ class TestSetFilters(unittest.TestCase):
 
 class TestGetGpsTime(unittest.TestCase):
     """Test cases for get_gps_time."""
-
-    def test_ok(self):
-        """Dummy test."""
-        self.assertTrue(True, msg='Should always pass.')
-
-
-class TestZipLogs(unittest.TestCase):
-    """Test cases for zip_logs."""
-
-    @patch('os.listdir', return_value=[])
-    @patch('zipfile.ZipFile')
-    def test_empty_directory(self, zip_file, list_dir):
-        """zip_logs() no files in directory."""
-        nmea.zip_logs()
-        self.assertEqual(zip_file.call_args_list, [],
-                         msg='Should not attempt to zip when no files in '
-                         'directory.')
-
-    @patch('os.listdir', return_value=['log.txt'])
-    @patch('zipfile.ZipFile')
-    def test_no_file_match(self, zip_file, list_dir):
-        """zip_logs() no *.n2k files in directory."""
-        nmea.zip_logs()
-        self.assertEqual(zip_file.call_args_list, [],
-                         msg='Should not attempt to zip when no *.n2k files '
-                         'in directory.')
-
-    @patch('os.listdir', return_value=['log.n2k'])
-    @patch('zipfile.ZipFile')
-    def test_one_file_match(self, zip_file, list_dir):
-        """zip_logs() one *.n2k file in directory."""
-        nmea.zip_logs()
-        self.assertEqual(zip_file.call_args_list,
-                         [call('log.n2k.zip', 'w')],
-                         msg='Expected one successful call to create zip '
-                         'file.')
-
-
-class TestSendToDrive(unittest.TestCase):
-    """Test cases for send_to_drive."""
 
     def test_ok(self):
         """Dummy test."""
