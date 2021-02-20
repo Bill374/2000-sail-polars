@@ -23,23 +23,25 @@ def start_can_bus():
     """
 
     logger = logging.getLogger('nmea')
-    try:
-        rc = subprocess.call('sudo ip link set can0 type can bitrate 100000')
-        if rc < 0:
-            logger.error('Call to ip link set terminated by signal.')
-            return None
-    except OSError:
-        logger.error('Call to ip link set failed.')
-        return None
 
     try:
-        rc = subprocess.call('sudo ifconfig can0 up')
-        if rc < 0:
-            logger.error('Call to ifconfig terminated by signal.')
-            return None
-    except OSError:
-        logger.error('Call to ifconfig failed.')
+        subprocess.run('sudo ip link set can0 type can bitrate 100000',
+                       check=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logger.error('ip link set can0: FAIL')
+        logger.error(f'return code = {rc}')
         return None
+    logger.info('ip link set can0: SUCCESS')
+
+    try:
+        subprocess.run('sudo ifconfig can0 up', check=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logger.error('ifconfig can0 up: FAIL')
+        logger.error(f'return code = {rc}')
+        return None
+    logger.info('ifconfig can0 up: SUCCESS')
 
     return can.interface.Bus(channel='can0', bustype='socketcan_ctypes')
 
@@ -56,11 +58,12 @@ def stop_can_bus():
 
     logger = logging.getLogger('nmea')
     try:
-        rc = subprocess.call('sudo ifconfig can0 down')
-        if rc < 0:
-            logger.error('Call to ifconfig terminated by signal.')
-    except OSError:
-        logger.error('Call to ifconfig failed.')
+        subprocess.run('sudo ifconfig can0 down', check=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logger.error('ifconfig can0 down: FAIL')
+        logger.error(f'return code = {rc}')
+
     return None
 
 
@@ -83,6 +86,7 @@ def set_filters(can0):
     """
 
     logger = logging.getLogger('nema')
+    logger.info('Adding filters')
     filters = [{"can_id": 0x11, "can_mask": 0x21, "extended": False}]
     can0.set_filters(filters)
 
@@ -108,4 +112,5 @@ def get_gps_time(can0, wait=100):
     """
 
     logger = logging.getLogger('nema')
+    logger.info('Get GPS Time')
     return datetime.datetime.today()
