@@ -10,6 +10,7 @@ import logging
 import os
 import wget
 import configparser
+import stat
 
 
 def make_directory(directory):
@@ -45,6 +46,17 @@ def make_directory(directory):
 def copy_files(option):
     """
     Copy files from GitHub to the Pi.
+
+    The list of files to be installed is read from option in the [FILES]
+    section of install.cfg.  Each file is expected to be on a separate line.
+    The first line is expected to give the target directory to copy the files
+    to.
+
+    If a target file already exists in the target directory on the pi it is
+    deleted and replaced with the version from GitHub.
+
+    When option is 'executable' the target files are made execuable by user,
+    group and world.
 
     Parameters
     ----------
@@ -97,16 +109,21 @@ def copy_files(option):
 
     logging.info(f'Copying {option} files from {git_hub_url}')
     logging.info(f'Copying {option} files to {install_directory}')
+    if option == 'executable':
+        executable = True
+    else:
+        executable = False
+
     # copy each file
     for file in file_list:
         logging.info(f'Copying {file}')
         fileToGet = f'{git_hub_url}{file}'
-        # if the file already exists in the install directory, remove it.
         name_only = file.split('/')[-1]
-        if os.path.exists(f'{install_directory}/{name_only}'):
+        target_file = f'{install_directory}/{name_only}'
+        if os.path.exists(target_file):
             logging.info(f'{name_only} already exists in {install_directory}. '
                          'Deleting.')
-            os.remove(f'{install_directory}/{name_only}')
+            os.remove(target_file)
         try:
             fileName = wget.download(fileToGet, out=install_directory)
             print('')
@@ -114,6 +131,12 @@ def copy_files(option):
             logging.error(f'Copying {file}: FAIL')
             logging.error(http_error)
             return -1
+        if executable:
+            logging.info(f'Make {name_only} executable by all.')
+            st = os.stat(target_file)
+            os.chmod(target_file,
+                     st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
         logging.info(f'Copying {file}: SUCCESS')
         logging.info(f'{fileName}')
 
