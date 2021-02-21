@@ -12,6 +12,34 @@ import wget
 import configparser
 
 
+def make_directory(directory):
+    """
+    If directory does not already exist create it.
+
+    Parameters
+    ----------
+    directory : string
+        directory to be created.
+
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
+    """
+    # Check that the install directory exists and is a directory.
+    if not os.path.isdir(directory):
+        logging.info(f'{directory} does not exist.')
+        try:
+            os.makedirs(directory)
+            logging.info(f'makedirs({directory}): SUCCESS')
+        except OSError:
+            logging.error(f'makedirs({directory}): FAIL')
+            return -1
+    return 0
+
+
 def copy_files(option):
     """
     Copy files from GitHub to the Pi.
@@ -61,13 +89,8 @@ def copy_files(option):
     install_directory = file_list.pop(0)
 
     # Check that the install directory exists and is a directory.
-    if not os.path.isdir(install_directory):
-        logging.info(f'{install_directory} does not exist.')
-        try:
-            os.makedirs(install_directory)
-            logging.info(f'makedirs({install_directory}): SUCCESS')
-        except OSError:
-            logging.error(f'makedirs({install_directory}): FAIL')
+    if not make_directory(install_directory):
+        return -1
 
     logging.info(f'Copying {option} files from {git_hub_url}')
     logging.info(f'Copying {option} files to {install_directory}')
@@ -365,6 +388,29 @@ def main():
             logging.error(f'{section} executed: FAIL')
             return rc
 
+    logging.info('*** Log Directories ***')
+    config = configparser.ConfigParser()
+    config.read('install.cfg')
+    directory_options = ['nmea_logs_directory', 'process_logs_directory']
+    for option in directory_options:
+        logging.info(f'reading {option}')
+        try:
+            logging.info(f'Reading [DEFAULT], {option} from install.cfg')
+            directory = config.get('DEFAULT', option)
+        except configparser.NoSectionError:
+            logging.error('DEFAULT section missing from install.cfg')
+            return -1
+        except configparser.NoOptionError:
+            logging.error(f'No {option} found in install.cfg')
+            return -1
+        logging.info(f'Executing {directory}')
+        rc = make_directory(directory)
+        if not rc:
+            logging.info(f'{directory} executed: SUCCESS')
+        else:
+            logging.error(f'{directory} executed: FAIL')
+            return rc
+
     logging.info('*** End pi-install ***')
     return 0
 
@@ -372,7 +418,7 @@ def main():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         handlers=[
-                            logging.FileHandler("/home/pi/pi_install.log"),
+                            logging.FileHandler('pi_install.log'),
                             logging.StreamHandler()
                             ])
     logging.shutdown()
