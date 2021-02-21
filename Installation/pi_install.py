@@ -11,6 +11,7 @@ import os
 import wget
 import configparser
 import stat
+import shutil
 
 
 def make_directory(directory):
@@ -431,6 +432,8 @@ def main():
             return -1
         logging.info(f'Executing {directory}')
         rc = make_directory(directory)
+        # Need to chown log file directories to pi:pi
+        shutil.chown(directory, 'pi', 'pi')
         if not rc:
             logging.info(f'{directory} executed: SUCCESS')
         else:
