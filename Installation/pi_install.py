@@ -29,6 +29,7 @@ def make_directory(directory):
 
     """
     # Check that the install directory exists and is a directory.
+    logging.info(f'Checking for {directory}')
     if not os.path.isdir(directory):
         logging.info(f'{directory} does not exist.')
         try:
@@ -37,6 +38,7 @@ def make_directory(directory):
         except OSError:
             logging.error(f'makedirs({directory}): FAIL')
             return -1
+        logging.info(f'{directory} OK.')
     return 0
 
 
@@ -89,7 +91,8 @@ def copy_files(option):
     install_directory = file_list.pop(0)
 
     # Check that the install directory exists and is a directory.
-    if not make_directory(install_directory):
+    rc = make_directory(install_directory)
+    if rc != 0:
         return -1
 
     logging.info(f'Copying {option} files from {git_hub_url}')
