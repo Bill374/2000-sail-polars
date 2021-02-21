@@ -87,6 +87,8 @@ See section '[LINUX]` in 'install.cfg'
 sudo pip install python-can
 sudo pip install RPi.GPIO
 sudo pip install smbus
+sudo pip install google-auth
+sudo pip install google_api-python-client
 ```
 
 See section '[PYTHON]` in `install.cfg'
@@ -112,9 +114,10 @@ curl --output install.cfg https://raw.githubusercontent.com/Bill374/2000-sail-po
 Much of the behaviour of the installer is driven by the various sections of `install.cfg`.  This file can be edited to modify the installer behaviour without the need for code changes.
 
 #### [FILES]
-To options *core* and *test*
+Three options *core*, *test*, *executables*
 * _core_ lists the files that are required for the logger and analyser to function.
 * _test_ lists files that may optionally be installed to run various tests to ensure everything is functioning as it should.
+* _executables_ lists some useful little utilities to be installed on the pi. 
 
 #### [LINUX]
 Lists the Linux packages that must be installed for the logger to function.
@@ -127,3 +130,9 @@ Lines to be added to `/boot/config.txt`.  The installer checks to see if the lin
 
 #### [CRONTAB]
 Lines to be added to the `crontab` files so the logger starts automatically when the Pi is booted up.
+
+#### [ENVIRONMENT]
+Variables to be exported to the runtime environment.
+
+#### [GOOGLE]
+Service account and authentication information to allow connecting to Google Drive to upload log files.  Authentication uses a private key that essentially gives broad annonymous access to the Google Drive.  The private key should never be disclosed to anyone and it will need to be manually copyed to a secure location on the Pi.
