@@ -19,7 +19,7 @@ import ups_lite
 
 def main():
     logger = logging.getLogger('power-monitor')
-    logger.info('Start external power monitoriing.')
+    logger.info('Start external power monitoring.')
     ups = ups_lite.UPS()
     logger.info(f'UPS Voltage: {ups.voltage():1.2f}')
     logger.info(f'UPS Capacity: {int(ups.capacity()):03d}%')
@@ -50,8 +50,9 @@ def main():
 
 if __name__ == '__main__':
     log_dir = os.getenv('RKRPROCESSLOGS')
-    logging.basicConfig(filename=f'{log_dir}/power-monitor.log',
-                        filemode='w',
-                        level=logging.INFO)
+    log_name = f'{log_dir}/power-monitor.log'
+    if os.path.exists(log_name):
+        os.rename(log_name, f'{log_name}.old')
+    logging.basicConfig(filename=log_name, filemode='w', level=logging.INFO)
     main()
     logging.shutdown()
