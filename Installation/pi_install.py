@@ -54,16 +54,11 @@ def copy_files(option):
         logging.error('No url found in install.cfg')
         return -1
 
+    file_list = files.splitlines(False)
+    file_list = list(filter(None, file_list))
+
     # Install directory
-    try:
-        logging.info('Reading [DEFAULT], install_directory from install.cfg')
-        install_directory = config.get('DEFAULT', 'install_directory')
-    except configparser.NoSectionError:
-        logging.error('DEFAULT section missing from install.cfg')
-        return -1
-    except configparser.NoOptionError:
-        logging.error('No default_directory found in install.cfg')
-        return -1
+    install_directory = file_list.pop(0)
 
     # Check that the install directory exists and is a directory.
     if not os.path.isdir(install_directory):
@@ -76,8 +71,6 @@ def copy_files(option):
 
     logging.info(f'Copying {option} files from {git_hub_url}')
     logging.info(f'Copying {option} files to {install_directory}')
-    file_list = files.splitlines(False)
-    file_list = list(filter(None, file_list))
     # copy each file
     for file in file_list:
         logging.info(f'Copying {file}')
@@ -335,13 +328,15 @@ def main():
     # Check that the is the most up-to-date version of this script
     # How best to do that?
 
-    logging.info('*** Core Files ***')
-    rc = copy_files('core')
-    if not rc:
-        logging.info('Core files successfully installed.')
-    else:
-        logging.error('Error installing core files.')
-        return rc
+    files_options = ['core', 'test', 'executable']
+    for option in files_options:
+        logging.info(f'*** {option} files ***')
+        rc = copy_files(option)
+        if not rc:
+            logging.info(f'{option} files successfully installed.')
+        else:
+            logging.error(f'Error installing {option} files.')
+            return rc
 
     logging.info('*** Linux Packages ***')
     rc = install_linux_packages()
