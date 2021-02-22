@@ -129,7 +129,12 @@ Lists additional Python modules that must be installed for the logger code.
 Lines to be added to `/boot/config.txt`.  The installer checks to see if the lines are already present and only adds them if they are not there.  The installer is not smart enought to remove any redundant lines if something needs to be changed about the installation.  Removing lines requires manual editing.
 
 #### [CRONTAB]
-Lines to be added to the `crontab` files so the logger starts automatically when the Pi is booted up.
+Lines to be added to the `/etc/crontab` files so the logger starts automatically when the Pi is booted up.
+```
+PYTHONPATH=/opt/RKR-Logger
+RKRPROCESSLOGS=/home/pi/RKR-process-logs
+@reboot root power-monitor &
+```
 
 #### [ENVIRONMENT]
 Variables to be exported to the runtime environment.
