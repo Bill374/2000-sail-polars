@@ -405,7 +405,7 @@ def main():
         return rc
 
     logging.info('*** Update Files ***')
-    sections = ['BOOT-CONFIG', 'ENVIRONMENT']
+    sections = ['BOOT-CONFIG', 'ENVIRONMENT', 'CRONTAB']
     for section in sections:
         logging.info(f'Executing {section}')
         rc = add_lines(section)

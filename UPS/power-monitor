@@ -8,7 +8,16 @@ Created on Thu Feb 11 19:24:20 2021
 Script to monitor the external power to the UPS and shut the Pi down gracefully
 if it is disconnected.  External power is checked once every five seconds.
 
-This script is automatically run whenever the Pi is rebooted.
+This script is automatically run as root whenever the Pi is rebooted.
+
+Schedule can be reviewed in sudo crontab -e
+
+The following lines are added to the crontab file by the install script.
+Actual paths are specified in install.cfg
+
+PYTHONPATH=/opt/RKR-Logger
+RKRPROCESSLOGS=/home/pi/RKR-process-logs
+@reboot root power-monitor &
 """
 from time import sleep
 import os
@@ -36,7 +45,7 @@ def main():
                 # Any actions we need to take before shutdown go here
 
                 try:
-                    subprocess.run('sudo halt', check=True)
+                    subprocess.run('halt', check=True)
                 except subprocess.CalledProcessError as process_error:
                     rc = process_error.returncode
                     logger.error(f'Shutdown failed. return code = {rc}')
