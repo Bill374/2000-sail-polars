@@ -16,7 +16,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 
-def zip_logs():
+def zip_logs(directory='.'):
     """
     Zip all the log files.
 
@@ -36,11 +36,11 @@ def zip_logs():
 
     logger = logging.getLogger('rkrutils')
 
-    logger.info('Checking for files ending with .n2k')
+    logger.info('Checking for files ending with .log')
     found = 0
     failed = 0
-    for file in os.listdir():
-        if file.endswith('.n2k'):
+    for file in os.listdir(directory):
+        if file.endswith('.log'):
             found += 1
             logger.info(f'Found {file}')
             zip_filename = f'{file}.zip'
@@ -63,16 +63,16 @@ def zip_logs():
                 logger.error(f'Zipping {file} into {zip_filename}: FAIL')
 
     if not found:
-        logger.info('No files ending with .n2k')
+        logger.info('No files ending with .log')
     else:
-        logger.info(f'Found {found} files ending with .n2k')
+        logger.info(f'Found {found} files ending with .log')
         logger.info(f'Successfully zipped {found - failed} files')
         if failed:
             logger.info(f'Failed to zip {failed} files')
     return None
 
 
-def send_to_drive():
+def send_to_drive(directory='.'):
     """
     Send all log files to Google Drive.
 
@@ -87,7 +87,7 @@ def send_to_drive():
 
     logger = logging.getLogger('rkrutils')
     logger.info('Zip files before sending to Google Drive')
-    zip_logs()
+    zip_logs(directory)
 
     SCOPES = ['https://www.googleapis.com/auth/drive']
     # Should read these from the config file or an environment variable
@@ -102,7 +102,7 @@ def send_to_drive():
     logger.info('Checking for files ending with .zip')
     found = 0
     failed = 0
-    for pi_file in os.listdir():
+    for pi_file in os.listdir(directory):
         if pi_file.endswith('.zip'):
             found += 1
             logger.info(f'Found {pi_file}')
@@ -120,12 +120,14 @@ def send_to_drive():
             # We will need a resumable upload.
             media = MediaFileUpload(pi_file,
                                     mimetype='appliacation/octet-stream')
+            logger.info(f'Attempting to upload {pi_file} to Google Drive')
             try:
                 drive_service.files().create(body=file_metadata,
                                              media_body=media,
                                              fields='id').execute()
                 logger.info(f'Uploading {pi_file} to Google Drive: SUCCESS')
-
+                logger.info(f'Removing {pi_file}.')
+                os.remove(pi_file)
             except HttpError as http_error:
                 failed += 1
                 logger.error(f'Uploading {pi_file} to Google Drive: FAIL')
