@@ -71,6 +71,18 @@ Then restart the raspberry pi `sudo reboot`
 
 See section `[BOOT-CONFIG]` in `install.cfg`
 
+## External Storage Configuration
+
+You can connect an hard disk, SSD, or USB stick to the USB port on the Pi, and mount the file system as an easy method to copy the log files for performance analysis.  By default, the Pi automatically mounts some of the popular file systems such as FAT, NTFS, and HFS+ at the `/media/pi/<HARD-DRIVE-LABEL>` location.
+
+### NTFS
+
+If your storage device uses an NTFS file system, you will only have read-only access to it by default.  To be able to write to the device, you need to install the ntfs-3g driver:
+```
+sudo apt update
+sudo apt install ntfs-3g
+```
+
 ## Python Dependencies
 
 Not all the python modules required for the logger and analyser are installed in the basic Pi Zero image.  Make sure `pip` is installed on the Pi and then use it to install the required modules.
