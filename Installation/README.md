@@ -72,8 +72,71 @@ Then restart the raspberry pi `sudo reboot`
 See section `[BOOT-CONFIG]` in `install.cfg`
 
 ## External Storage Configuration
+You can connect a USB drive to the USB port on the Pi, and mount the file system as an easy method to copy the log files for performance analysis.  By default, the Pi automatically mounts some of the popular file systems such as FAT, NTFS, and HFS+ at the `/media/pi/<HARD-DRIVE-LABEL>` location.
 
-You can connect an hard disk, SSD, or USB stick to the USB port on the Pi, and mount the file system as an easy method to copy the log files for performance analysis.  By default, the Pi automatically mounts some of the popular file systems such as FAT, NTFS, and HFS+ at the `/media/pi/<HARD-DRIVE-LABEL>` location.
+### Step 1 – Plug in the USB Drive
+
+### Step 2 – Identify the File System Type and Unique ID
+```
+sudo lsblk -o UUID,NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL,MODEL
+```
+This should produce an output something like this.
+```
+UUID                                 NAME        FSTYPE  SIZE MOUNTPOINT LABEL  MODEL
+                                     sda                29.8G                   Relay_UFD
+491A347D4977C5A0                     └─sda1      ntfs   29.8G            USB    
+                                     mmcblk0            59.5G                   
+4AD7-B4D5                            ├─mmcblk0p1 vfat    256M /boot      boot   
+2887d26c-6ae7-449d-9701-c5a4018755b0 └─mmcblk0p2 ext4   59.2G /          rootfs 
+```
+
+The USB drive will usually refer to `sda` or `sda1`.  The UUID above is `491A347D4977C5A0`.  The FSTYPE is `ntfs`.  Note these down.
+You would need to repeat this step if you wanted to use a different device as the UUID would be different.  
+The remaining steps are handled by the install script.  You will need to edit the [DEFAULT] section of `install.cfg` to put in your specific values
+```
+[DEFAULT]
+    usb_directory = /media/usb
+    usb_uuid = 491A347D4977C5A0
+    usb_fstype = ntfs
+```
+
+### Step 3 – Create a Mount Point
+A mount point is a directory that will point to the contents of your flash drive. Create a suitable folder :
+```
+sudo mkdir /media/usb
+```
+For this example we use `usb` but you can give it whatever name you like.  Now we need to make sure the Pi user owns this folder
+```
+sudo chown -R pi:pi /media/usb
+```
+
+### Step 4 – Manually Mount The Drive
+```
+sudo mount /dev/sda1 /media/usb -o uid=pi,gid=pi
+```
+This will mount the drive so that the ordinary pi user can write to it.  Omitting the `-o uid=pi,gid=pi` would mean you could only write to it using `sudo`.
+
+### Step 5 – Un-mounting The Drive
+You don’t need to manually un-mount if you shutdown the pi but if you need to remove the drive at any other time you should un-mount it first.  Only the user that mounted the drive can un-mount it.
+```
+umount /media/usb
+```
+If you used the fstab file to auto-mount it you will need to use :
+```
+sudo umount /media/usb
+```
+If you are paying attention you will notice the command is `umount` NOT `unmount`!
+
+### Step 6 – Auto Mount
+When the Pi restarts the mount will be lost and you will need to repeat Step 4. If you want the USB drive to be mounted when the system starts you can edit the fstab file :
+```
+sudo nano /etc/fstab
+```
+Then add the following line at the end :
+```
+UUID=491A347D4977C5A0 /media/usb vfat auto,nofail,noatime,users,rw,uid=pi,gid=pi 0 0
+```
+The `nofail` option allows the boot process to proceed if the drive is not plugged in.  The `noatime` option stops the file access time being updated every time a file is read from the USB drive. This helps improve performance.
 
 ### NTFS
 
