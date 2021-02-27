@@ -81,14 +81,13 @@ You can connect a USB drive to the USB port on the Pi, and mount the file system
 sudo lsblk -o UUID,NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL,MODEL
 ```
 This should produce an output something like this.
-```
-UUID                                 NAME        FSTYPE  SIZE MOUNTPOINT LABEL  MODEL
-                                     sda                29.8G                   Relay_UFD
-491A347D4977C5A0                     └─sda1      ntfs   29.8G            USB    
-                                     mmcblk0            59.5G                   
-4AD7-B4D5                            ├─mmcblk0p1 vfat    256M /boot      boot   
-2887d26c-6ae7-449d-9701-c5a4018755b0 └─mmcblk0p2 ext4   59.2G /          rootfs 
-```
+
+> UUID                                 NAME        FSTYPE  SIZE MOUNTPOINT LABEL  MODEL
+>                                      sda                29.8G                   Relay_UFD
+> 491A347D4977C5A0                     └─sda1      ntfs   29.8G            USB    
+>                                      mmcblk0            59.5G                   
+> 4AD7-B4D5                            ├─mmcblk0p1 vfat    256M /boot      boot   
+> 2887d26c-6ae7-449d-9701-c5a4018755b0 └─mmcblk0p2 ext4   59.2G /          rootfs 
 
 The USB drive will usually refer to `sda` or `sda1`.  The UUID above is `491A347D4977C5A0`.  The FSTYPE is `ntfs`.  Note these down.
 You would need to repeat this step if you wanted to use a different device as the UUID would be different.  
@@ -188,6 +187,9 @@ curl --output install.cfg https://raw.githubusercontent.com/Bill374/2000-sail-po
 
 Much of the behaviour of the installer is driven by the various sections of `install.cfg`.  This file can be edited to modify the installer behaviour without the need for code changes.
 
+#### [DEFAULT]
+In most cases this is the only part of `install.cfg` that you will need to edit.  There are some values in this section that are installation specific.
+
 #### [FILES]
 Three options *core*, *test*, *executables*
 * _core_ lists the files that are required for the logger and analyser to function.
@@ -202,13 +204,26 @@ Lists additional Python modules that must be installed for the logger code.
 
 #### [BOOT-CONFIG]
 Lines to be added to `/boot/config.txt`.  The installer checks to see if the lines are already present and only adds them if they are not there.  The installer is not smart enought to remove any redundant lines if something needs to be changed about the installation.  Removing lines requires manual editing.
+```
+# Waveshare RS485 CAN HAT mcp2515 kernel driver
+dtparam=spi=on
+# Waveshare RS485 CAN HAT - 12MHz crystal version
+dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=2000000
+```
 
 #### [CRONTAB]
-Lines to be added to the `/etc/crontab` files so the logger starts automatically when the Pi is booted up.
+Lines to be added to the `/etc/crontab` file so the logger starts automatically when the Pi is booted up.
 ```
 PYTHONPATH=/opt/RKR-Logger
 RKRPROCESSLOGS=/home/pi/RKR-process-logs
 @reboot root power-monitor &
+```
+
+#### [FSTAB]
+Lines to be added to `/etc/fstab` file so the USB drive is mounted if it is plugged in when the Pi is booted up.
+```
+# USB Drive
+UUID=%(usb_uuid)s %(usb_directory)s %(usb_fstype)s auto,nofail,noatime,users,rw,uid=pi,gid=pi 0 0
 ```
 
 #### [ENVIRONMENT]
