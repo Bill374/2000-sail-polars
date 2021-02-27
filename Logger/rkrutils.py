@@ -16,17 +16,27 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 
-def zip_logs(directory='.'):
+def zip_logs(directory='.', file_extension='.n2k'):
     """
     Zip all the log files.
 
     Zip all the log files to save space and reduce costs for data transmission
-    to Google Drive.
-    Each log file with the extension .n2k is zipped into a separate archive.
-    It is important that this function is not called when logging is in
-    progress or bad things could happen.  Perhaps we should give the active
+    to Google Drive.  Interestingly this may not actually save space.  Early
+    tests show that the zipped files are not much smaller.
+    Each log file that matches file_extension is zipped into a separate
+    archive.  It is important that this function is not called when logging is
+    in progress or bad things could happen.  Perhaps we should give the active
     log file a different extension and only rename it to .n2k after it is
-    closed
+    closed.
+
+    Parameters
+    ----------
+    directory : str
+        The directory to search for log files to zip.  Defaults to the current
+        working directory.
+
+    file_extension : str
+        The pattern to match for files to zip.  Defaults to .n2k.
 
     Returns
     -------
@@ -36,17 +46,19 @@ def zip_logs(directory='.'):
 
     logger = logging.getLogger('rkrutils')
 
-    logger.info('Checking for files ending with .log')
+    logger.info(f'Checking for files ending with {file_extension} in '
+                '{directory}')
     found = 0
     failed = 0
     for file in os.listdir(directory):
-        if file.endswith('.log'):
+        if file.endswith(file_extension):
             found += 1
             logger.info(f'Found {file}')
             zip_filename = f'{file}.zip'
             try:
-                with zipfile.ZipFile(zip_filename, 'w') as log_zip:
-                    log_zip.write(file)
+                with zipfile.ZipFile(f'{directory}/{zip_filename}',
+                                     'w') as log_zip:
+                    log_zip.write(f'{directory}/{file}')
                     if log_zip.testzip() is not None:
                         failed += 1
                         logger.error(f'Zipping {file} into {zip_filename}: '
@@ -63,9 +75,9 @@ def zip_logs(directory='.'):
                 logger.error(f'Zipping {file} into {zip_filename}: FAIL')
 
     if not found:
-        logger.info('No files ending with .log')
+        logger.info(f'No files ending with {file_extension}')
     else:
-        logger.info(f'Found {found} files ending with .log')
+        logger.info(f'Found {found} files ending with {file_extension}')
         logger.info(f'Successfully zipped {found - failed} files')
         if failed:
             logger.info(f'Failed to zip {failed} files')
@@ -142,3 +154,18 @@ def send_to_drive(directory='.'):
             logger.info(f'Failed to upload {failed} files')
 
     return None
+
+
+def send_to_drive_resumable(directory='.'):
+    """
+    Send all log files to Google Drive.
+
+    Send all log files from the Pi to Google Drive.  If the file transfer was
+    successful delete the log files from the Pi.
+    This version uses resumable upload that avoids the 5Mb per file limit.
+
+    Returns
+    -------
+    None.
+
+    """
