@@ -15,43 +15,78 @@ To avoid the log files becoming too large, only messages directly relevant to sa
 
 ### Messages included:
 The list of messages still needs to be verified.
-* 127245, Rudder 
+* 127245, Rudder
+  * Angle
+  * Position 
 * 127250, Vessel Heading
-* 127285, Magnetic Variation
-* 1282159, Speed - _not found in log file_
+  * Heading
+  * Deviation
+  * Variation
+  * Reference (True/Magnetic)
+* 127251, Rate of Turn 
+* 127252, Heave
+* 127257, Attitude
+  * Yaw
+  * Pitch
+  * Roll
+* 128259, Speed
+  * Speed Water Referenced
+  * Speed Ground Referenced
+  * Speed Water Referenced Type
+  * Speed Direction
 * 129025, Position Rapid Update
+  * Latitude
+  * Longitude
+* 129026, COG & SOG, Rapid Update
+  * COG Reference (True/Magnetic)
+  * COG
+  * SOG
 * 129029, GNSS Postion Data
-* 129033, Date and Time
+  * Days since January 1, 1970
+  * Seconds since midnight
+  * Lattitude
+  * Longitude
+  * Altitude
+* 129033, Date and Time _Very infrequent in logged data_
+  * Days since January 1, 1970
+  * Seconds since midnight
+  * Local Offset
 * 130306, Wind Data
+  * Wind Speed
+  * Wind Direction
+  * Wind Reference (True/Magnetic/Apparent
 * 130577, Direction Data
+  * Data Mode
+  * COG Reference (True/Magnetic)
+  * COG
+  * SOG
+  * Heading
+  * SPeed Through Water 
+  * Set
+  * Drift
 
 ### Messages excluded:
-* 59922
-* 59923
-* 61183
-* 65280
-* 65305
-* 65313
-* 65330
-* 65341
-* 126996
-* 127237
-* 127251
-* 127252
-* 127257
-* 128259
-* 128267
-* 129025
-* 129026
-* 129283
-* 129284
-* 129539
-* 129540
-* 130310
-* 130311
-* 130316
-* 130822
-* 130824
+* 59922, Unknown
+* 59923, Unknown
+* 61183, Unknown
+* 65280, Manufacturer Proprietary single-frame non-addressed
+* 65305, Unknown
+* 65313, Unknown
+* 65330, Unknown
+* 65341, Simnet: Autopilot Mode
+* 126996, Product Information
+* 127237, Heading/Track control
+* 128267, Water Depth
+* 129283, Cross Track Error
+* 129284, Navigation Data
+* 127285, Magnetic Variation (to be added to analyzer)
+* 129539, GNSS DOPs
+* 129540, GNSS Sats in View
+* 130310, Environmental Parameters
+* 130311, Environmental Parameters
+* 130316, Temperature Extended Range
+* 130822, Unknown
+* 130824, B&G: Wind data _Not enough information in analyzer_
 
 ## Output
 Logging output is written to a plain text file named RKR-yyyy-mm-dd.log
