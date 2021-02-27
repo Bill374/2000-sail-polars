@@ -15,55 +15,46 @@ To avoid the log files becoming too large, only messages directly relevant to sa
 
 ### Messages included:
 The list of messages still needs to be verified.
-* 127245, Rudder
+* 127245, Rudder _single, updates 0.1s, source(1,15)_
   * Angle
   * Position 
-* 127250, Vessel Heading
+* 127250, Vessel Heading _single, updates 0.1s, source(2)_
   * Heading
   * Deviation
   * Variation
   * Reference (True/Magnetic)
-* 127251, Rate of Turn 
-* 127252, Heave
-* 127257, Attitude
+* 127251, Rate of Turn _single, updates 0.1s, source(2)_
+* 127252, Heave _single, updates 0.1s, source(2)_
+* 127257, Attitude _single, updates 0.1s, source(2)_
   * Yaw
   * Pitch
   * Roll
-* 128259, Speed
+* 128259, Speed _single, updates 0.2s, source(11,12)_
   * Speed Water Referenced
   * Speed Ground Referenced
   * Speed Water Referenced Type
   * Speed Direction
-* 129025, Position Rapid Update
+* 129025, Position Rapid Update _single, updates 0.1s, source(9)_
   * Latitude
   * Longitude
-* 129026, COG & SOG, Rapid Update
+* 129026, COG & SOG, Rapid Update _single, updates 0.5s, source(9)_
   * COG Reference (True/Magnetic)
   * COG
   * SOG
-* 129029, GNSS Postion Data
+* 129029, GNSS Postion Data _fast, updates 1s, source(9)_
   * Days since January 1, 1970
   * Seconds since midnight
   * Lattitude
   * Longitude
   * Altitude
-* 129033, Date and Time _Very infrequent in logged data_
+* 129033, Date and Time _single,very infrequent, source(9,12)_
   * Days since January 1, 1970
   * Seconds since midnight
   * Local Offset
-* 130306, Wind Data
+* 130306, Wind Data _single, updates 0.1s, source(12,16,17)_
   * Wind Speed
   * Wind Direction
-  * Wind Reference (True/Magnetic/Apparent
-* 130577, Direction Data
-  * Data Mode
-  * COG Reference (True/Magnetic)
-  * COG
-  * SOG
-  * Heading
-  * SPeed Through Water 
-  * Set
-  * Drift
+  * Wind Reference (True/Magnetic/Apparent)
 
 ### Messages excluded:
 * 59922, Unknown
