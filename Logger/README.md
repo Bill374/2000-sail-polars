@@ -15,15 +15,43 @@ To avoid the log files becoming too large, only messages directly relevant to sa
 
 ### Messages included:
 The list of messages still needs to be verified.
-* 130306, Wind Data
-* 1282159, Speed
-* 130577, Direction Data
-* 127245, Rudder
+* 127245, Rudder 
 * 127250, Vessel Heading
 * 127285, Magnetic Variation
+* 1282159, Speed - _not found in log file_
 * 129025, Position Rapid Update
 * 129029, GNSS Postion Data
 * 129033, Date and Time
+* 130306, Wind Data
+* 130577, Direction Data
+
+### Messages excluded:
+* 59922
+* 59923
+* 61183
+* 65280
+* 65305
+* 65313
+* 65330
+* 65341
+* 126996
+* 127237
+* 127251
+* 127252
+* 127257
+* 128259
+* 128267
+* 129025
+* 129026
+* 129283
+* 129284
+* 129539
+* 129540
+* 130310
+* 130311
+* 130316
+* 130822
+* 130824
 
 ## Output
 Logging output is written to a plain text file named RKR-yyyy-mm-dd.log
