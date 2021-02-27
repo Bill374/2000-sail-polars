@@ -193,7 +193,7 @@ def install_linux_packages():
 
     logging.info('Update Linux package index.')
     try:
-        subprocess.run('apt-get -qy update', check=True)
+        subprocess.run('/usr/bin/apt-get -qy update', check=True)
     except subprocess.CalledProcessError as process_error:
         rc = process_error.returncode
         logging.error(f'Update Linux index return code = {rc}: FAIL')
@@ -202,7 +202,7 @@ def install_linux_packages():
 
     logging.info('Upgrade existing Linux packages.')
     try:
-        subprocess.run('apt-get -qy upgrade', check=True)
+        subprocess.run('/usr/bin/apt-get -qy upgrade', check=True)
     except subprocess.CalledProcessError as process_error:
         rc = process_error.returncode
         logging.error(f'Upgrade existing Linux packages return code = {rc}: '
@@ -213,7 +213,8 @@ def install_linux_packages():
     for package in package_list:
         logging.info(f'Installing Linux package {package}.')
         try:
-            subprocess.run(f'apt-get -qy install {package}', check=True)
+            subprocess.run(f'/usr/bin/apt-get -qy install {package}',
+                           check=True)
         except subprocess.CalledProcessError as process_error:
             rc = process_error.returncode
             logging.error(f'Installing Linux package {package} return code '
@@ -253,7 +254,8 @@ def install_python_modules():
     for module in module_list:
         logging.info(f'Installing Python module {module}')
         try:
-            subprocess.run(f'pip3 install --upgrade {module}', check=True)
+            subprocess.run(f'/usr/bin/pip3 install --upgrade {module}',
+                           check=True)
         except subprocess.CalledProcessError as process_error:
             rc = process_error.returncode
             logging.error(f'Installing Python module {module} return code '
