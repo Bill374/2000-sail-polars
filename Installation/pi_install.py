@@ -12,6 +12,7 @@ import wget
 import configparser
 import stat
 import shutil
+import subprocess
 
 
 def make_directory(directory):
@@ -191,29 +192,34 @@ def install_linux_packages():
     package_list = list(filter(None, package_list))
 
     logging.info('Update Linux package index.')
-    rc = os.system('apt-get -qy update')
-    if not rc:
-        logging.info('Update Linux package index: SUCCESS')
-    else:
-        logging.error('Update Linux index: FAIL')
+    try:
+        subprocess.run('apt-get -qy update', check=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logging.error(f'Update Linux index return code = {rc}: FAIL')
         return -1
+    logging.info('Update Linux package index: SUCCESS')
 
     logging.info('Upgrade existing Linux packages.')
-    rc = os.system('apt-get -qy upgrade')
-    if not rc:
-        logging.info('Upgrade existing Linux packages: SUCCESS')
-    else:
-        logging.error('Upgrade existing Linux packages: FAIL')
+    try:
+        subprocess.run('apt-get -qy upgrade', check=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logging.error(f'Upgrade existing Linux packages return code = {rc}: '
+                      'FAIL')
         return -1
+    logging.info('Upgrade existing Linux packages: SUCCESS')
 
     for package in package_list:
         logging.info(f'Installing Linux package {package}.')
-        rc = os.system(f'apt-get -qy install {package}')
-        if not rc:
-            logging.info(f'Installing Linux package {package}: SUCCESS')
-        else:
-            logging.error(f'Installing Linux package {package}: FAIL')
+        try:
+            subprocess.run(f'apt-get -qy install {package}', check=True)
+        except subprocess.CalledProcessError as process_error:
+            rc = process_error.returncode
+            logging.error(f'Installing Linux package {package} return code '
+                          f'= {rc}: FAIL')
             return -1
+        logging.info(f'Installing Linux package {package}: SUCCESS')
 
     return 0
 
@@ -245,13 +251,15 @@ def install_python_modules():
     module_list = list(filter(None, module_list))
 
     for module in module_list:
-        logging.info(f'Installing Python module {module}.')
-        rc = os.system(f'pip3 install --upgrade {module}')
-        if not rc:
-            logging.info(f'Installing Python module {module}: SUCCESS')
-        else:
-            logging.error(f'Installing Python module {module}: FAIL')
+        logging.info(f'Installing Python module {module}')
+        try:
+            subprocess.run(f'pip3 install --upgrade {module}', check=True)
+        except subprocess.CalledProcessError as process_error:
+            rc = process_error.returncode
+            logging.error(f'Installing Python module {module} return code '
+                          f'= {rc}: FAIL')
             return -1
+        logging.info(f'Installing Python module {module}: SUCCESS')
 
     return 0
 
