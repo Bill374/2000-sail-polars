@@ -15,7 +15,7 @@ import shutil
 import subprocess
 
 
-def make_directory(directory):
+def make_directory(directory, pi_owner=False):
     """
     If directory does not already exist create it.
 
@@ -23,6 +23,8 @@ def make_directory(directory):
     ----------
     directory : string
         directory to be created.
+    pi_owner : boolean
+        True if the directory needs to be owned by the pi user
 
     Returns
     -------
@@ -42,6 +44,50 @@ def make_directory(directory):
             logging.error(f'makedirs({directory}): FAIL')
             return -1
         logging.info(f'{directory} OK.')
+    if pi_owner:
+        shutil.chown(directory, 'pi', 'pi')
+        logging.info(f'{directory} owned by pi user')
+
+    return 0
+
+
+def create_directories():
+    """
+    Create each directory in install.cfg if it does not already exist.
+
+    Directory list is read from [DIRECTORY] section of install.cfg.
+    Each directory is chown to the pi user.
+
+    Returns
+    -------
+    rc : int
+         0 : successful
+        -1 : error
+
+    """
+    config = configparser.ConfigParser()
+    config.read('install.cfg')
+
+    # List of directories to create
+    try:
+        logging.info('Reading [DIRECTORY], list from install.cfg')
+        directories = config.get('DIRECTORY', 'list')
+    except configparser.NoSectionError:
+        logging.error('DIRECTORY section missing from install.cfg')
+        return -1
+    except configparser.NoOptionError:
+        logging.error('No list of directories found in install.cfg')
+        return -1
+
+    logging.info('Making directories')
+    directory_list = directories.splitlines(False)
+    directory_list = list(filter(None, directory_list))
+    for directory in directory_list:
+        rc = make_directory(directory, pi_owner=True)
+        if rc:
+            logging.info('Make directory: FAIL')
+            return -1
+
     return 0
 
 
@@ -388,67 +434,48 @@ def main():
     # Check that the is the most up-to-date version of this script
     # How best to do that?
 
+    logging.info('*** Copy Files ***')
     files_options = ['core', 'test', 'executable']
     for option in files_options:
-        logging.info(f'*** {option} files ***')
+        logging.info(f'Copy {option} files')
         rc = copy_files(option)
-        if not rc:
-            logging.info(f'{option} files successfully installed.')
-        else:
-            logging.error(f'Error installing {option} files.')
+        if rc:
+            logging.error(f'Copy {option} files: FAIL')
             return rc
+        logging.info(f'Copy {option} files: SUCCESS')
+    logging.info('Copy Files: SUCCESS')
 
     logging.info('*** Linux Packages ***')
     rc = install_linux_packages()
-    if not rc:
-        logging.info('Linux packages successfully installed.')
-    else:
-        logging.error('Error installing Linux packages.')
+    if rc:
+        logging.error('Linux Packages: FAIL')
         return rc
+    logging.info('Linux Packages: SUCCESS')
 
     logging.info('*** Python Modules ***')
     rc = install_python_modules()
-    if not rc:
-        logging.info('Python modules successfully installed.')
-    else:
-        logging.error('Error installing python modules.')
+    if rc:
+        logging.error('Python Modules: FAIL')
         return rc
+    logging.info('Python Modules: SUCCESS')
 
-    logging.info('*** Update Files ***')
-    sections = ['BOOT-CONFIG', 'ENVIRONMENT', 'CRONTAB']
+    logging.info('*** Update System Files ***')
+    sections = ['BOOT-CONFIG', 'ENVIRONMENT', 'CRONTAB', 'FSTAB']
     for section in sections:
         logging.info(f'Executing {section}')
         rc = add_lines(section)
-        if not rc:
-            logging.info(f'{section} executed: SUCCESS')
-        else:
+        if rc:
             logging.error(f'{section} executed: FAIL')
             return rc
+        logging.info(f'{section} executed: SUCCESS')
+    logging.info('Update System Files: SUCCESS')
 
-    logging.info('*** Log Directories ***')
-    config = configparser.ConfigParser()
-    config.read('install.cfg')
-    directory_options = ['nmea_logs_directory', 'process_logs_directory']
-    for option in directory_options:
-        logging.info(f'reading {option}')
-        try:
-            logging.info(f'Reading [DEFAULT], {option} from install.cfg')
-            directory = config.get('DEFAULT', option)
-        except configparser.NoSectionError:
-            logging.error('DEFAULT section missing from install.cfg')
-            return -1
-        except configparser.NoOptionError:
-            logging.error(f'No {option} found in install.cfg')
-            return -1
-        logging.info(f'Executing {directory}')
-        rc = make_directory(directory)
-        # Need to chown log file directories to pi:pi
-        shutil.chown(directory, 'pi', 'pi')
-        if not rc:
-            logging.info(f'{directory} executed: SUCCESS')
-        else:
-            logging.error(f'{directory} executed: FAIL')
-            return rc
+    logging.info('*** Directories ***')
+    rc = create_directories()
+    if rc:
+        logging.error('Directories: FAIL')
+        return rc
+    logging.info('Directories: SUCCESS')
 
     logging.info('*** End pi-install ***')
     return 0
