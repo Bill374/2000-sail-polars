@@ -81,14 +81,14 @@ You can connect a USB drive to the USB port on the Pi, and mount the file system
 sudo lsblk -o UUID,NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL,MODEL
 ```
 This should produce an output something like this.
-
-> UUID                                 NAME        FSTYPE  SIZE MOUNTPOINT LABEL  MODEL
->                                      sda                29.8G                   Relay_UFD
-> 491A347D4977C5A0                     └─sda1      ntfs   29.8G            USB    
->                                      mmcblk0            59.5G                   
-> 4AD7-B4D5                            ├─mmcblk0p1 vfat    256M /boot      boot   
-> 2887d26c-6ae7-449d-9701-c5a4018755b0 └─mmcblk0p2 ext4   59.2G /          rootfs 
-
+```
+UUID                                 NAME        FSTYPE  SIZE MOUNTPOINT LABEL  MODEL
+                                     sda                29.8G                   Relay_UFD
+491A347D4977C5A0                     └─sda1      ntfs   29.8G            USB    
+                                     mmcblk0            59.5G                   
+4AD7-B4D5                            ├─mmcblk0p1 vfat    256M /boot      boot   
+2887d26c-6ae7-449d-9701-c5a4018755b0 └─mmcblk0p2 ext4   59.2G /          rootfs 
+```
 The USB drive will usually refer to `sda` or `sda1`.  The UUID above is `491A347D4977C5A0`.  The FSTYPE is `ntfs`.  Note these down.
 You would need to repeat this step if you wanted to use a different device as the UUID would be different.  
 The remaining steps are handled by the install script.  You will need to edit the [DEFAULT] section of `install.cfg` to put in your specific values
