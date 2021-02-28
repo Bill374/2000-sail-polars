@@ -434,6 +434,13 @@ def main():
     # Check that the is the most up-to-date version of this script
     # How best to do that?
 
+    logging.info('*** Directories ***')
+    rc = create_directories()
+    if rc:
+        logging.error('Directories: FAIL')
+        return rc
+    logging.info('Directories: SUCCESS')
+
     logging.info('*** Copy Files ***')
     files_options = ['core', 'test', 'executable']
     for option in files_options:
@@ -469,13 +476,6 @@ def main():
             return rc
         logging.info(f'{section} executed: SUCCESS')
     logging.info('Update System Files: SUCCESS')
-
-    logging.info('*** Directories ***')
-    rc = create_directories()
-    if rc:
-        logging.error('Directories: FAIL')
-        return rc
-    logging.info('Directories: SUCCESS')
 
     logging.info('*** End pi-install ***')
     return 0
