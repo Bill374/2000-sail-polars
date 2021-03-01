@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Feb 11 19:24:20 2021
+
+@author: wmorland
+
+Script to move sailing performance log files to USB.
+
+This should happen automatically on power down, but in a long race, we might
+want to clean up what is on the Pi in case we run out of space.
+
+The mount point for the USB drive is read from: USBDRIVE=/media/usb
+The locations of the sailing logs is: NMEALOGS=/home/pi/nmea-logs
+
+"""
+import os
+import logging
+import rkrutils
+
+
+def main():
+    logger = logging.getLogger('copy-logs')
+    logger.info('Start NMEA 2000 sailing logs move to USB.')
+    log_directory = os.getenv('NMEALOGS')
+    logger.info(f'Moving files ending in .n2k from {log_directory} to USB')
+    rkrutils.send_to_usb(log_directory, '.n2k')
+    logger.info('End NMEA 2000 sailing logs move to USB.')
+    return 0
+
+
+if __name__ == '__main__':
+    log_dir = os.getenv('RKRPROCESSLOGS')
+    log_name = f'{log_dir}/copy-logs.log'
+    if os.path.exists(log_name):
+        os.rename(log_name, f'{log_name}.old')
+    logging.basicConfig(filename=log_name, filemode='w', level=logging.INFO)
+    main()
+    logging.shutdown()

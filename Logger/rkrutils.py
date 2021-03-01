@@ -126,7 +126,7 @@ def send_to_usb(pi_directory='.', file_extension='.n2k'):
 
     found = 0
     failed = 0
-    logger.info('Looking for files to copy')
+    logger.info(f'Looking for files to copy in {pi_directory}')
     for pi_file in os.listdir(pi_directory):
         if pi_file.endswith(file_extension):
             found += 1
