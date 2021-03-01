@@ -112,7 +112,6 @@ def send_to_usb(pi_directory='.', file_extension='.n2k'):
     if not os.path.ismount(usb_directory):
         logger.warning(f'USB drive not mounted at {usb_directory}')
         logger.info('Mount USB drive')
-
         try:
             subprocess.run(['sudo', 'mount', '/dev/sda1', usb_directory, '-o',
                             'uid=pi,gid=pi'], check=True)
@@ -123,6 +122,7 @@ def send_to_usb(pi_directory='.', file_extension='.n2k'):
         if not os.path.ismount(usb_directory):
             logging.error('USB mount succeeded but it is still not there.')
             return None
+        logger.info('Mount USB drive: SUCCESS')
 
     found = 0
     failed = 0

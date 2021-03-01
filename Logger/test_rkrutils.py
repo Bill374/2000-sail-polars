@@ -6,13 +6,11 @@ Created on Wed Feb 17 20:14:14 2021
 @author: wmorland
 """
 
-import os
 import unittest
 from unittest.mock import patch
-from unittest.mock import call
 import zipfile
 import rkrutils
-from pathlib import Path
+import subprocess
 
 
 class TestZipLogs(unittest.TestCase):
@@ -61,12 +59,34 @@ class TestSendToUSB(unittest.TestCase):
         self.assertTrue(True, msg='Should always pass.')
 
     @patch('os.getenv', return_value='/media/usb')
-    def test_usb_not_mounted(self, mock_env):
-        """USB drive not mounted."""
+    @patch('os.path.ismount', return_value=False)
+    @patch('subprocess.run',
+           side_effect=subprocess.CalledProcessError(32, 'cmd'))
+    def test_no_usb(self, mock_run, mock_ismount, mock_env):
+        """USB drive not mounted and not mountable."""
         with self.assertLogs(level='WARNING') as logs:
             rkrutils.send_to_usb()
-        mock_env.assert_called_once_with('USBDRIVEw')
-#       mock_mount.assert_called_once()
+        mock_env.assert_called_once_with('USBDRIVE')
+        mock_ismount.assert_called_once_with('/media/usb')
+        mock_run.assert_called_once_with(['sudo', 'mount', '/dev/sda1',
+                                          '/media/usb', '-o', 'uid=pi,gid=pi'],
+                                         check=True)
+        self.assertEqual(logs.output,
+                         ['WARNING:rkrutils:USB drive not mounted at '
+                          '/media/usb',
+                          'WARNING:root:Mount USB drive return code = 32: '
+                          'FAIL'],
+                         msg='expect WARNING logged when drive not mounted')
+
+    @patch('os.getenv', return_value='/media/usb')
+    @patch('os.path.ismount', side_effect=[False, True])
+    @patch('subprocess.run', return_value=0)
+    @patch('shutil.move')
+    def test_usb_not_mounted(self, mock_move, mock_run, mock_ismount,
+                             mock_env):
+        """USB drive not mounted, mount succeeds."""
+        with self.assertLogs(level='WARNING') as logs:
+            rkrutils.send_to_usb()
         self.assertEqual(logs.output,
                          ['WARNING:rkrutils:USB drive not mounted at '
                           '/media/usb'],
