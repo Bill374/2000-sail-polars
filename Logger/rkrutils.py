@@ -10,8 +10,8 @@ import os
 import logging
 import zipfile
 import contextlib
-from pathlib import Path
 import shutil
+import subprocess
 
 
 def zip_logs(directory='.', file_extension='.n2k'):
@@ -111,8 +111,18 @@ def send_to_usb(pi_directory='.', file_extension='.n2k'):
     logger.info(f'Looking for USB drive at {usb_directory}')
     if not os.path.ismount(usb_directory):
         logger.warning(f'USB drive not mounted at {usb_directory}')
-        # maybe we can try to mount it
-        return None
+        logger.info('Mount USB drive')
+
+        try:
+            subprocess.run(['sudo', 'mount', '/dev/sda1', usb_directory, '-o',
+                            'uid=pi,gid=pi'], check=True)
+        except subprocess.CalledProcessError as process_error:
+            rc = process_error.returncode
+            logging.warning(f'Mount USB drive return code = {rc}: FAIL')
+            return None
+        if not os.path.ismount(usb_directory):
+            logging.error('USB mount succeeded but it is still not there.')
+            return None
 
     found = 0
     failed = 0
