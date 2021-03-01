@@ -109,8 +109,7 @@ def send_to_usb(pi_directory='.', file_extension='.n2k'):
 
     usb_directory = os.getenv('USBDRIVE')
     logger.info(f'Looking for USB drive at {usb_directory}')
-    usb_path = Path(usb_directory)
-    if not usb_path.ismount():
+    if not os.path.ismount(usb_directory):
         logger.warning(f'USB drive not mounted at {usb_directory}')
         # maybe we can try to mount it
         return None

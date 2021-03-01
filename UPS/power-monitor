@@ -24,6 +24,7 @@ import os
 import subprocess
 import logging
 import ups_lite
+import rkrutils
 
 
 def main():
@@ -40,9 +41,15 @@ def main():
                 logger.info('External power disconnected.')
                 logger.info(f'UPS Voltage: {ups.voltage():1.2f}')
                 logger.info(f'UPS Capacity: {int(ups.capacity()):03d}%')
-                logger.info('Starting shutdown process.')
 
-                # Any actions we need to take before shutdown go here
+                # signal an interupt to the logging process
+
+                nmea_log_directory = os.getenv('NMEALOGS')
+                logger.info(f'Move NMEA 2000 logs from {nmea_log_directory} '
+                            'to USB drive')
+                rkrutils.send_to_usb(nmea_log_directory, '.n2k')
+
+                logger.info('Starting shutdown process.')
 
                 try:
                     subprocess.run('halt', check=True)
