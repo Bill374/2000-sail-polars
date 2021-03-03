@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar  2 20:16:19 2021
+
+@author: wmorland
+"""
+
+
+import os
+import logging
+import nmea
+import can
+from time import sleep
+
+
+def main():
+    """
+    Periodically send a message to the CAN Bus.
+
+    Returns
+    -------
+    None.
+
+    """
+    logger = logging.getLogger('can-send')
+    logger.info('*** can-send ***')
+
+    can0 = nmea.start_can_bus()
+
+    msg = can.Message(arbitration_id=0x123,
+                      data=[0, 1, 2, 3, 4, 5, 6, 7], extended_id=False)
+    logger.info('Starting loop to repeated send CAN messages until interupt.')
+    try:
+        while True:
+            can0.send(msg)
+            sleep(1)
+    except KeyboardInterrupt:
+        logger.info('Loop interupted.')
+
+    logger.info('*** can-send ***')
+
+
+if __name__ == '__main__':
+    log_dir = os.getenv('RKRPROCESSLOGS')
+    log_name = f'{log_dir}/can-send.log'
+    if os.path.exists(log_name):
+        os.rename(log_name, f'{log_name}.old')
+    logging.basicConfig(filename=log_name, filemode='w', level=logging.INFO)
+    main()
+    logging.shutdown()
