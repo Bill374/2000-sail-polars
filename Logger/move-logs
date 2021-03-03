@@ -20,7 +20,7 @@ import rkrutils
 
 
 def main():
-    logger = logging.getLogger('copy-logs')
+    logger = logging.getLogger('move-logs')
     logger.info('Start NMEA 2000 sailing logs move to USB.')
     log_directory = os.getenv('NMEALOGS')
     logger.info(f'Moving files ending in .n2k from {log_directory} to USB')
@@ -31,7 +31,7 @@ def main():
 
 if __name__ == '__main__':
     log_dir = os.getenv('RKRPROCESSLOGS')
-    log_name = f'{log_dir}/copy-logs.log'
+    log_name = f'{log_dir}/move-logs.log'
     if os.path.exists(log_name):
         os.rename(log_name, f'{log_name}.old')
     logging.basicConfig(filename=log_name, filemode='w', level=logging.INFO)
