@@ -25,7 +25,8 @@ def start_can_bus():
     logger = logging.getLogger('nmea')
 
     try:
-        subprocess.run('sudo ip link set can0 type can bitrate 100000',
+        subprocess.run(['sudo', 'ip', 'link', 'set', 'can0', 'type', 'can',
+                        'bitrate', '100000'],
                        check=True)
     except subprocess.CalledProcessError as process_error:
         rc = process_error.returncode
@@ -35,7 +36,7 @@ def start_can_bus():
     logger.info('ip link set can0: SUCCESS')
 
     try:
-        subprocess.run('sudo ifconfig can0 up', check=True)
+        subprocess.run(['sudo', 'ifconfig', 'can0', 'up'], check=True)
     except subprocess.CalledProcessError as process_error:
         rc = process_error.returncode
         logger.error('ifconfig can0 up: FAIL')
@@ -58,11 +59,12 @@ def stop_can_bus():
 
     logger = logging.getLogger('nmea')
     try:
-        subprocess.run('sudo ifconfig can0 down', check=True)
+        subprocess.run(['sudo', 'ifconfig', 'can0', 'down'], check=True)
     except subprocess.CalledProcessError as process_error:
         rc = process_error.returncode
         logger.error('ifconfig can0 down: FAIL')
         logger.error(f'return code = {rc}')
+    logger.info('ifconfig can0 down: SUCCESS')
 
     return None
 
