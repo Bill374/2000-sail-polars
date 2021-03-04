@@ -36,6 +36,9 @@ def main():
             can0.send(msg)
             sleep(1)
     except KeyboardInterrupt:
+        pass
+    finally:
+        nmea.stop_can_bus()
         logger.info('Loop interupted.')
 
     logger.info('*** can-send ***')
