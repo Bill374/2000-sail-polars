@@ -116,3 +116,42 @@ def get_gps_time(can0, wait=100):
     logger = logging.getLogger('nema')
     logger.info('Get GPS Time')
     return datetime.datetime.today()
+
+
+def capture_can_messages(can0):
+    """
+    Capture all messages from the CAN Bus.
+
+    Messages are captured in series of log files, once the max file size is
+    reached a new file is started.  In this simple initial version there is no
+    filtering on the messages.
+
+    Parameters
+    ----------
+    can0 : can.BusABC
+
+    Returns
+    -------
+    None.
+
+    """
+    logger = logging.getLogger('nmea')
+    logger.info('Capture CAN messages')
+
+    file_size = 500
+    log_file = 'foo'
+
+    can0 = start_can_bus()
+    can_logger = can.SizedRotatingLogger(base_filename=log_file,
+                                         max_bytes=file_size)
+
+    try:
+        while True:
+            msg = can0.recv(1)
+            if msg is not None:
+                can_logger(msg)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        stop_can_bus()
+        can_logger.stop()

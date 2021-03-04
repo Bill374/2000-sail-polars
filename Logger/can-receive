@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar  2 20:16:19 2021
+
+@author: wmorland
+"""
+
+
+import os
+import logging
+import nmea
+import can
+
+
+def main():
+    """
+    Periodically send a message to the CAN Bus.
+
+    Returns
+    -------
+    None.
+
+    """
+    logger = logging.getLogger('can-receive')
+    logger.info('*** can-receive ***')
+
+    file_size = 500
+    log_file = 'foo'
+
+    can0 = nmea.start_can_bus()
+    can_logger = can.SizedRotatingLogger(base_filename=log_file,
+                                         max_bytes=file_size)
+
+    try:
+        while True:
+            msg = can0.recv(1)
+            if msg is not None:
+                can_logger(msg)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        nmea.stop_can_bus()
+        can_logger.stop()
+        logger.info('Loop interupted.')
+
+    logger.info('*** can-receive ***')
+
+
+if __name__ == '__main__':
+    log_dir = os.getenv('RKRPROCESSLOGS')
+    log_name = f'{log_dir}/can-receive.log'
+    if os.path.exists(log_name):
+        os.rename(log_name, f'{log_name}.old')
+    logging.basicConfig(filename=log_name, filemode='w', level=logging.INFO)
+    main()
+    logging.shutdown()
