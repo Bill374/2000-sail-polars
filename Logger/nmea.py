@@ -139,11 +139,12 @@ def capture_can_messages(can0):
     logger = logging.getLogger('nmea')
     logger.info('Capture CAN messages')
 
-    file_size = 500
+    file_size = 2048
     log_file = 'foo.n2k'
 
     can0 = start_can_bus()
-    can_logger = cannew.Logger(base_filename=log_file)
+    can_logger = cannew.SizedRotatingLogger(base_filename=log_file,
+                                            max_bytes=file_size)
 
     try:
         while True:

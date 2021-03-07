@@ -15,7 +15,7 @@ import can
 
 def main():
     """
-    Periodically send a message to the CAN Bus.
+    Read messages from the CAN Bus.
 
     Returns
     -------
@@ -25,12 +25,10 @@ def main():
     logger = logging.getLogger('can-receive')
     logger.info('*** can-receive ***')
 
-    file_size = 500
-    log_file = 'foo'
+    log_file = 'foo.csv'
 
     can0 = nmea.start_can_bus()
-    can_logger = can.SizedRotatingLogger(base_filename=log_file,
-                                         max_bytes=file_size)
+    can_logger = can.Logger(log_file)
 
     try:
         while True:
