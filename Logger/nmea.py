@@ -142,7 +142,6 @@ def capture_can_messages(can0):
     file_size = 2048
     log_file = 'foo.n2k'
 
-    can0 = start_can_bus()
     can_logger = cannew.SizedRotatingLogger(base_filename=log_file,
                                             max_bytes=file_size)
 

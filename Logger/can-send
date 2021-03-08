@@ -28,12 +28,27 @@ def main():
 
     can0 = nmea.start_can_bus()
 
-    msg = can.Message(arbitration_id=0x123,
-                      data=[0, 1, 2, 3, 4, 5, 6, 7], extended_id=False)
+# Rudder
+# 2,127245,15,255,8,ff,ff,ff,7f,e1,fe,ff,ff
+# Position Rapid Update
+# 2,129025,9,255,8,2f,26,ff,19,cb,0e,a0,d0
+# GNS Position Data
+# 3,129029,9,255,8,20,2b,7a,6d,48,40,95,79
+# 3,129029,9,255,8,21,2e,80,cc,ff,52,da,85
+# 3,129029,9,255,8,22,0d,06,00,17,f8,2e,2a
+# 3,129029,9,255,8,23,3e,f8,f4,00,bb,3d,02
+# 3,129029,9,255,8,24,00,00,00,00,10,fc,0c
+# 3,129029,9,255,8,25,46,00,8c,00,4b,f2,ff
+# 3,129029,9,255,8,26,ff,ff,ff,ff,ff,ff,ff
+
+
+    rudder_msg = can.Message(arbitration_id=0b010_01_11110001_00001101_00001111,
+                             data=[0xff, 0xff, 0xff, 0x7f, 0xe1, 0xfe, 0xff, 0xff],
+                             extended_id=True)
     logger.info('Starting loop to repeated send CAN messages until interupt.')
     try:
         while True:
-            can0.send(msg)
+            can0.send(rudder_msg)
             sleep(1)
     except KeyboardInterrupt:
         pass

@@ -10,11 +10,26 @@ import os
 import can
 from datetime import datetime
 import pathlib
-from typing import Optional
-from can.typechecking import StringPathLike
+import typing
+from typing import Optional, Callable, Union, TextIO, BinaryIO
+from abc import ABC, ABCMeta, abstractmethod
 
 
-class N2KWriter(can.BaseIOHandler, can.Listener):
+StringPathLike = typing.Union[str, "os.PathLike[str]"]
+
+
+class MessageWriter(can.io.generic.BaseIOHandler, can.Listener,
+                    metaclass=ABCMeta):
+    """The base class for all writers."""
+
+
+class FileIOMessageWriter(MessageWriter, metaclass=ABCMeta):
+    """The base class for all writers."""
+
+    file: Union[TextIO, BinaryIO]
+
+
+class N2KWriter(can.io.generic.BaseIOHandler, can.Listener):
     """
     Writes a comma separated text file with a line for each NMEA2000 message.
 
@@ -84,25 +99,23 @@ class N2KWriter(can.BaseIOHandler, can.Listener):
             pgn = (msg.arbitration_id & LONG_PGN) >> 8
         source = msg.arbitration_id & SOURCE
 
+        data = ','.join(format(n, '02X') for n in msg.data)
+
         row = ','.join([
-            datetime.fromtimestamp(msg.timestamp).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            datetime.fromtimestamp(msg.timestamp).strftime('%Y-%m-%d %H:%M:%S.%f'),
             str(priority),
             str(pgn),
             str(source),
             str(destination),
             str(msg.dlc),
+            data
         ])
-        dlc = msg.dlc
-        data = msg.data
-        while dlc:
-            row = ','.join([row, format(data & 0xFF, 'x')])
-            data >> 8
-            dlc -= 1
+
         self.file.write(row)
         self.file.write('\n')
 
 
-class Logger(can.BaseIOHandler, can.Listener):
+class Logger(can.io.generic.BaseIOHandler, can.Listener):
     """
     Logs CAN messages to a file.
     The format is determined from the file format which can be one of:
@@ -161,7 +174,7 @@ class Logger(can.BaseIOHandler, can.Listener):
             ) from None
 
 
-class BaseRotatingLogger(can.Listener, can.ABC):
+class BaseRotatingLogger(can.Listener, ABC):
     """
     Base class for rotating CAN loggers. This class is not meant to be
     instantiated directly. Subclasses must implement the `should_rollover`
@@ -194,17 +207,17 @@ class BaseRotatingLogger(can.Listener, can.ABC):
         ".txt": can.Printer,
         ".n2k": N2KWriter
     }
-    namer: can.Optional[can.Callable] = None
-    rotator: can.Optional[can.Callable] = None
+    namer: Optional[Callable] = None
+    rotator: Optional[Callable] = None
     rollover_count: int = 0
-    _writer: can.Optional[can.FileIOMessageWriter] = None
+    _writer: Optional[FileIOMessageWriter] = None
 
     def __init__(self, *args, **kwargs):
         self.writer_args = args
         self.writer_kwargs = kwargs
 
     @property
-    def writer(self) -> can.FileIOMessageWriter:
+    def writer(self) -> FileIOMessageWriter:
         if not self._writer:
             raise ValueError("Attempt to access writer failed.")
 
@@ -285,12 +298,12 @@ class BaseRotatingLogger(can.Listener, can.ABC):
         """
         self.writer.stop()
 
-    @can.abstractmethod
+    @abstractmethod
     def should_rollover(self, msg: can.Message) -> bool:
         """Determine if the rollover conditions are met."""
         ...
 
-    @can.abstractmethod
+    @abstractmethod
     def do_rollover(self):
         """Perform rollover."""
         ...
