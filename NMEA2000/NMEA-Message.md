@@ -50,27 +50,27 @@ All frames that make up a fast message have the same header repeated.  The separ
 
 #### Fast Message Frame 1
 
-Data Byte 1
-000 - Sequence identifier (first 3 bits).
-All frames that make up a fast message have the same sequence identifier.
-A subsequent message of the same type will have a different sequence identifier to avoid confusion.
-00000 - Frame identifier (last 5 bits).
-Zero for the first frame
+##### Data Byte 1
+000 - Sequence identifier (first 3 bits).<br>
+All frames that make up a fast message have the same sequence identifier.<br>
+A subsequent message of the same type will have a different sequence identifier to avoid confusion.<br>
+00000 - Frame identifier (last 5 bits).<br>
+Zero for the first frame<br>
 
-Data Byte 2
+##### Data Byte 2
 The number of bytes of data in the message across all frames in the sequence.
 
-Data Bytes 3 - 8
+##### Data Bytes 3 - 8
 The first six data bytes of the fast message.
 
 #### Frames 2 and up
 
-Data Byte 1
-000 - Sequence identifier (first 3 bits).
-All frames that make up a fast message have the same sequence identifier.
-A subsequent message of the same type will have a different sequence identifier to avoid confusion.
-00000 - Frame identifier (last 5 bits).
-Increments for each frame in the message
+##### Data Byte 1
+000 - Sequence identifier (first 3 bits).<br>
+All frames that make up a fast message have the same sequence identifier.<br>
+A subsequent message of the same type will have a different sequence identifier to avoid confusion.<br>
+00000 - Frame identifier (last 5 bits).<br>
+Increments for each frame in the message<br>
 
-Data Bytes 2 - 8
+##### Data Bytes 2 - 8
 Seven bytes of data.
