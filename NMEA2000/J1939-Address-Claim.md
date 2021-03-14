@@ -53,3 +53,34 @@ The following rules apply:
 * As soon as a node has successfully claimed an address, it may begin with regular network activities, i.e. sending messages or responding to messages.
 * If a node (Controller Application) receives an Address Claimed message it should first compare the claimed address with its own. If the addresses are identical, the node should compare its own NAME to the NAME of the claiming node. In case its own NAME has a higher priority (lower numeric value) it will then transmit an Address Claimed message containing its NAME and address. If its own NAME is of a lower priority the node, depending on its capabilities, should either send a Cannot Claim Address message or claim another address.
 * In case a node loses its address through the previously described procedure and was also in the process of sending a Transport Protocol message (see chapter Transport Protocol Functions) it should cease the transmission immediately, however, without sending a Transport Protocol Abort message. The receiver of the Transport Protocol message will detect the interruption through the corresponding timeout process.
+
+|Parameter Group Name|Request|
+|--------------------|-------|
+|Parameter Group Number|60928|
+|Definition|Address Claimed Message|
+|Transmission Rate|As Required|
+|Data Length|8 bytes (CAN dlc = 8)|
+|Extended Data Page (R)|0|
+|Data Page|0|
+|PDU Format|238|
+|PDU Specific|255 = Global Destination Address|
+|Default Priority|6|
+|Data Description|Name of Controller Application|
+|----------------|------------------------------|
+|Byte 1|Bits 8-1 LSB of Identity Field|
+|Byte 2|Bits 8-1 2nd byte of Identity Field|
+|Byte 3|Bits 8-6 LSB of Manufacturer Code <br> Bits 5-1 MSB of Identity Field|
+|Byte 4|Bits 8-1 MSB of Manufactorer Code|
+|Byte 5|Bits 8-4 Function Instance <br> Bits 3-1 ECU Instance|
+|Byte 6|Bits 8-1 Function|
+|Byte 7|Bits 8-2 Vehicle System <br> Bit 1 Reserved|
+|Byte 8|Bits 8 Arbitrary Address Capable <br> Bits 7-5 Industry Group <br> Bits 4-1 Vehicle System Instance|
+
+The _Cannot Claim Address_ message has the same format as the Address Claimed message, but it uses the NULL address (254) as the source address.
+
+The following rules apply for the Cannot Claim Address message:
+* As the name implies, a node without arbitrary addressing capabilities will send a Cannot Claim Address message when it is unable to claim the preferred address.
+* A node with arbitrary addressing capabilities will send a Cannot Claim Address message when no addresses are available in the network.
+* If the Cannot Claim Address message is a response to a Request for Address Claimed message, the node should apply a “pseudo-random” delay of 0 to 153 ms should be applied before sending the response. This will help prevent the possibility of a bus error, which will occur when two nodes send the same message with identical message ID.
+
+**Note:** SAE J1939/81 is concerned that the occurrence of such an error condition will consume “a large number of bit times on the bus”. However, the time for transmitting a CAN Bus message with a 29-Bit ID followed by an error frame will be well under 1 ms.
