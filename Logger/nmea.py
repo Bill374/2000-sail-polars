@@ -90,7 +90,30 @@ def set_filters(can0):
 
     logger = logging.getLogger('nema')
     logger.info('Adding filters')
-    filters = [{"can_id": 0x11, "can_mask": 0x21, "extended": False}]
+
+    # Rudder        = 127245, 0x1f10d00
+    # Heading       = 127250, 0x1f11200
+    # Rate of Turn  = 127251, 0x1f11300
+    # Heave         = 127252, 0x1f11400
+    # Attitude      = 127257, 0x1f11900
+    # Speed         = 128259, 0x1f50300
+    # Position      = 129025, 0x1f80100
+    # COG & SOG     = 129026, 0x1f80200
+    # Date & Time   = 129033, 0x1f80900
+    # Wind Data     = 130306, 0x1fd0200
+
+    filters = [
+        {'can_id': 0x1f10d00, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f11200, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f11300, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f11400, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f11900, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f50300, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f80100, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f80200, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1f80900, 'can_mask': 0x3ffff00, 'extended': True},
+        {'can_id': 0x1fd0200, 'can_mask': 0x3ffff00, 'extended': True},
+        ]
     can0.set_filters(filters)
 
 
@@ -117,6 +140,21 @@ def get_gps_time(can0, wait=100):
     logger = logging.getLogger('nema')
     logger.info('Get GPS Time')
     return datetime.datetime.today()
+
+
+def is_gps_time_message(msg):
+    LONG_PGN = 0b00011_11111111_11111111_00000000
+    pgn = (msg.arbitration_id & LONG_PGN) >> 8
+
+    if pgn != 129029:
+        # Not GNS Postiion Data
+        return False
+    if msg.data[:1] & 0b1111:
+        # Frame identifier not zero
+        # Is the first fram zero or one?
+        return False
+
+    return True
 
 
 def capture_can_messages(can0):
@@ -150,6 +188,7 @@ def capture_can_messages(can0):
             msg = can0.recv(1)
             if msg is not None:
                 can_logger(msg)
+                if msg
     except KeyboardInterrupt:
         pass
     finally:
