@@ -3,8 +3,7 @@ Information from https://copperhilltech.com/blog/tag/Address+Claim<br>
 No guarantee this is the same process as NMEA2000 but it seems likely
 
 The SAE J1939 network management messages have the same characteristics as all other J1939 messages. These messages are:
-|Message|PGN|PF|PS|SA|Data Length|Data|
-|-------|---|--|--|--|-----------|----|
+|**Message**|**PGN**|**PF**|**PS**|**SA**|**Data Length**|**Data**|
 |Request for address claimed|59904|234|DA[^1]|3 bytes|PGN 60928|
 |Address claimed|238|255|SA|8 bytes|Name|
 |Cannot claim source address|238|255|254|8 bytes|Name|
@@ -18,8 +17,7 @@ The SAE J1939 network management messages have the same characteristics as all o
 
 The Request for Address Claimed message (PGN 59904) is identical to the Request message type as described in SAE J1939/21 and chapter Parameter Group Numbers in this book.
 
-|Parameter Group Name|Request|
-|--------------------|-------|
+|**Parameter Group Name**|**Request**|
 |Parameter Group Number|59904|
 |Definition|Requests a Parameter Group from a singe device or all devices in the network|
 |Transmission Rate|User defined (no more than 2 or 3 times a second is recommended)|
@@ -54,8 +52,7 @@ The following rules apply:
 * If a node (Controller Application) receives an Address Claimed message it should first compare the claimed address with its own. If the addresses are identical, the node should compare its own NAME to the NAME of the claiming node. In case its own NAME has a higher priority (lower numeric value) it will then transmit an Address Claimed message containing its NAME and address. If its own NAME is of a lower priority the node, depending on its capabilities, should either send a Cannot Claim Address message or claim another address.
 * In case a node loses its address through the previously described procedure and was also in the process of sending a Transport Protocol message (see chapter Transport Protocol Functions) it should cease the transmission immediately, however, without sending a Transport Protocol Abort message. The receiver of the Transport Protocol message will detect the interruption through the corresponding timeout process.
 
-|Parameter Group Name|Request|
-|--------------------|-------|
+|**Parameter Group Name**|**Request**|
 |Parameter Group Number|60928|
 |Definition|Address Claimed Message|
 |Transmission Rate|As Required|
@@ -65,8 +62,7 @@ The following rules apply:
 |PDU Format|238|
 |PDU Specific|255 = Global Destination Address|
 |Default Priority|6|
-|Data Description|Name of Controller Application|
-|----------------|------------------------------|
+|**Data Description**|**Name of Controller Application**|
 |Byte 1|Bits 8-1 LSB of Identity Field|
 |Byte 2|Bits 8-1 2nd byte of Identity Field|
 |Byte 3|Bits 8-6 LSB of Manufacturer Code <br> Bits 5-1 MSB of Identity Field|
