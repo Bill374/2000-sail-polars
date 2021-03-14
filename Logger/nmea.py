@@ -13,6 +13,35 @@ import cannew
 from datetime import datetime
 
 
+def can_bus_is_up():
+    """
+    Check if the NMEA 2000 network is already up and running.
+
+    Returns
+    -------
+    bool
+        True if the nework is running
+        False otherwise
+
+    """
+
+    logger = logging.getLogger('nmea')
+
+    try:
+        config = subprocess.run(['sudo', 'ifconfig', 'can0'], check=True,
+                                capture_output=True, text=True)
+    except subprocess.CalledProcessError as process_error:
+        rc = process_error.returncode
+        logger.error('ifconfig can0: FAIL')
+        logger.error(f'return code = {rc}')
+        return False
+
+    if (config.stdout.find('can0') == 0 and config.stdout.find('RUNNING') > 0):
+        return True
+
+    return False
+
+
 def start_can_bus():
     """
     Start the the NMEA 2000 network
@@ -25,25 +54,28 @@ def start_can_bus():
 
     logger = logging.getLogger('nmea')
 
-    try:
-        subprocess.run(['sudo', 'ip', 'link', 'set', 'can0', 'type', 'can',
-                        'bitrate', '100000'],
-                       check=True)
-    except subprocess.CalledProcessError as process_error:
-        rc = process_error.returncode
-        logger.error('ip link set can0: FAIL')
-        logger.error(f'return code = {rc}')
-        return None
-    logger.info('ip link set can0: SUCCESS')
+    if can_bus_is_up():
+        logger.info('CAN bus is already running.')
+    else:
+        try:
+            subprocess.run(['sudo', 'ip', 'link', 'set', 'can0', 'type', 'can',
+                            'bitrate', '100000'],
+                           check=True)
+        except subprocess.CalledProcessError as process_error:
+            rc = process_error.returncode
+            logger.error('ip link set can0: FAIL')
+            logger.error(f'return code = {rc}')
+            return None
+        logger.info('ip link set can0: SUCCESS')
 
-    try:
-        subprocess.run(['sudo', 'ifconfig', 'can0', 'up'], check=True)
-    except subprocess.CalledProcessError as process_error:
-        rc = process_error.returncode
-        logger.error('ifconfig can0 up: FAIL')
-        logger.error(f'return code = {rc}')
-        return None
-    logger.info('ifconfig can0 up: SUCCESS')
+        try:
+            subprocess.run(['sudo', 'ifconfig', 'can0', 'up'], check=True)
+        except subprocess.CalledProcessError as process_error:
+            rc = process_error.returncode
+            logger.error('ifconfig can0 up: FAIL')
+            logger.error(f'return code = {rc}')
+            return None
+        logger.info('ifconfig can0 up: SUCCESS')
 
     return can.interface.Bus(channel='can0', bustype='socketcan_ctypes')
 
