@@ -4,6 +4,7 @@ No guarantee this is the same process as NMEA2000 but it seems likely
 
 The SAE J1939 network management messages have the same characteristics as all other J1939 messages. These messages are:
 |**Message**|**PGN**|**PF**|**PS**|**SA**|**Data Length**|**Data**|
+|-----------|-------|------|------|------|---------------|--------|
 |Request for address claimed|59904|234|DA[^1]|3 bytes|PGN 60928|
 |Address claimed|238|255|SA|8 bytes|Name|
 |Cannot claim source address|238|255|254|8 bytes|Name|
@@ -18,6 +19,7 @@ The SAE J1939 network management messages have the same characteristics as all o
 The Request for Address Claimed message (PGN 59904) is identical to the Request message type as described in SAE J1939/21 and chapter Parameter Group Numbers in this book.
 
 |**Parameter Group Name**|**Request**|
+|------------------------|-----------|
 |Parameter Group Number|59904|
 |Definition|Requests a Parameter Group from a singe device or all devices in the network|
 |Transmission Rate|User defined (no more than 2 or 3 times a second is recommended)|
@@ -53,6 +55,7 @@ The following rules apply:
 * In case a node loses its address through the previously described procedure and was also in the process of sending a Transport Protocol message (see chapter Transport Protocol Functions) it should cease the transmission immediately, however, without sending a Transport Protocol Abort message. The receiver of the Transport Protocol message will detect the interruption through the corresponding timeout process.
 
 |**Parameter Group Name**|**Request**|
+|------------------------|-----------|
 |Parameter Group Number|60928|
 |Definition|Address Claimed Message|
 |Transmission Rate|As Required|
