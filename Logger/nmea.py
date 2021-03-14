@@ -70,6 +70,34 @@ def stop_can_bus():
     return None
 
 
+def negotiate_node_id():
+    """
+    Negotiate a node ID for the Pi on the NMEA 2000 network.
+
+    https://copperhilltech.com/blog/tag/Address+Claim
+
+    How does this process work?
+    PGN 59392: isoAcknowledgement
+    PGN 59904: isoRequest
+    PGN 60160: isoTransportProtocolDataTransfer
+    PGN 60416: isoTransportProtocolConnectionManagementRequestToSend
+    PGN 60416: isoTransportProtocolConnectionManagementClearToSend
+    PGN 60416: isoTransportProtocolConnectionManagementEndOfMessage
+    PGN 60416: isoTransportProtocolConnectionManagementBroadcastAnnounce
+    PGN 60416: isoTransportProtocolConnectionManagementAbort
+    PGN 60928: isoAddressClaim
+    PGN 65240: isoCommandedAddress
+
+    Returns
+    -------
+    int
+        DESCRIPTION.
+
+    """
+
+    return 0
+
+
 def set_filters(can0):
     """
     Set filters on the NMEA 2000 network.
