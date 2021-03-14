@@ -102,6 +102,105 @@ def stop_can_bus():
     return None
 
 
+class NMEA2000_Frame:
+
+    # NMEA2000 Masks for 29 bit arbitration ID
+    PRIORITY = 0b11100_00000000_00000000_00000000
+    PDU_F = 0b00000_11111111_00000000_00000000
+    PDU_S = 0b00000_00000000_11111111_00000000
+    SHORT_PGN = 0b00011_11111111_00000000_00000000
+    LONG_PGN = 0b00011_11111111_11111111_00000000
+    SOURCE = 0b00000_00000000_00000000_11111111
+
+    __slots__ = (
+        "date_time",
+        "priority",
+        "pdu_f",
+        "pdu_s",
+        "pgn",
+        "source",
+        "is_short_pgn",
+        "is_extended_id",
+        "is_remote_frame",
+        "is_error_frame",
+        "channel",
+        "dlc",
+        "data",
+        "is_fd",
+        "is_rx",
+        "srr",
+        "bitrate_switch",
+        "error_state_indicator"
+        )
+
+    def __init__(self, msg: can.Message):
+        self.date_time = datetime.fromtimestamp(msg.timestamp)
+
+        # Pick apart the arbitration ID into the separate NMEA2000 fields
+        self.priority = (msg.arbitration_id & PRIORITY) >> 26
+        self.pdu_f = (msg.arbitration_id & PDU_F) >> 16
+        if self.pdu_f <= 239:
+            # The message has a specific destination
+            self.destination = (msg.arbitration_id & PDU_S) >> 8
+            self.pgn = (msg.arbitration_id & SHORT_PGN) >> 16
+            self.is_short_pgn = True
+        else:
+            self.destination = 255
+            self.pgn = (msg.arbitration_id & LONG_PGN) >> 8
+            self.is_short_pgn = False
+        self.source = msg.arbitration_id & SOURCE
+
+        self.is_extended_id = msg.is_extended_id
+        self.is_remote_frame = msg.is_remote_frame
+        self.channel = msg.channel
+        self.is_fd = msg.is_fd
+        self.is_rx = msg.is_rx
+        self.srr = 0b1                # Subsitute Remote Request, what is this?
+        self.bitrate_switch = msg.bitrate_switch
+        self.error_state_indicator = msg.error_state_indicator
+
+    def __str__(self) -> str:
+        field_data = ','.join(format(n, '02X') for n in self.data)
+
+        line = ','.join([
+            self.date_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
+            str(self.priority),
+            str(self.pgn),
+            str(self.source),
+            str(self.destination),
+            str(self.dlc),
+            data
+        ])
+
+        return line
+
+    def can_message(self):
+        # Assemble an arbitration_id
+        arbitraiton_id = self.priority << 26
+        if self.is_short_pgn:
+            arbitration_id |= (self.pgn << 16)
+            arbitration_id |= (self.destination << 8)
+        else:
+            arbitration_id |= (self.pgn << 8)
+        arbitration_id |= self.source
+
+        new = can.Message(
+            timstamp=self.date_time.timestamp(),
+            arbitration_id=arbitration_id,
+            is_extended_id=self.is_extended_id,
+            is_remote_frame=self.is_remote_frame,
+            is_error_frame=self.is_error_frame,
+            channel=self.channel,
+            dlc=self.dlc,
+            data=self.data,
+            is_fd=self.is_fd,
+            is_rx=self.is_rx,
+            bitrate_switch=self.bitrate_switch,
+            error_state_indicator=self.error_state_indictor
+            )
+        return new
+
+
 def negotiate_node_id():
     """
     Negotiate a node ID for the Pi on the NMEA 2000 network.

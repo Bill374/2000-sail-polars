@@ -13,6 +13,7 @@ import pathlib
 import typing
 from typing import Optional, Callable, Union, TextIO, BinaryIO
 from abc import ABC, ABCMeta, abstractmethod
+import nema
 
 
 StringPathLike = typing.Union[str, "os.PathLike[str]"]
@@ -79,39 +80,8 @@ class N2KWriter(can.io.generic.BaseIOHandler, can.Listener):
         assert msg.is_extended_id  # NEMA2000 messages are always extended ID
         assert msg.dlc == 8        # NEMA2000 messages always have 8 data bytes
 
-        # NMEA2000 Masks for 29 bit arbitration ID
-        PRIORITY = 0b11100_00000000_00000000_00000000
-        PDU_F = 0b00000_11111111_00000000_00000000
-        PDU_S = 0b00000_00000000_11111111_00000000
-        SHORT_PGN = 0b00011_11111111_00000000_00000000
-        LONG_PGN = 0b00011_11111111_11111111_00000000
-        SOURCE = 0b00000_00000000_00000000_11111111
-
-        # Pick apart the arbitration ID into the separate NMEA2000 fields
-        priority = (msg.arbitration_id & PRIORITY) >> 26
-        pdu_f = (msg.arbitration_id & PDU_F) >> 16
-        if pdu_f <= 239:
-            # The message has a specific destination
-            destination = (msg.arbitration_id & PDU_S) >> 8
-            pgn = (msg.arbitration_id & SHORT_PGN) >> 16
-        else:
-            destination = 255
-            pgn = (msg.arbitration_id & LONG_PGN) >> 8
-        source = msg.arbitration_id & SOURCE
-
-        data = ','.join(format(n, '02X') for n in msg.data)
-
-        row = ','.join([
-            datetime.fromtimestamp(msg.timestamp).strftime('%Y-%m-%d %H:%M:%S.%f'),
-            str(priority),
-            str(pgn),
-            str(source),
-            str(destination),
-            str(msg.dlc),
-            data
-        ])
-
-        self.file.write(row)
+        nema_msg = nema.NMEA2000_Frame(msg)
+        self.file.write(str(nema_msg))
         self.file.write('\n')
 
 
